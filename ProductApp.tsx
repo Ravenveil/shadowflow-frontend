@@ -467,12 +467,8 @@ export default function ProductApp() {
                   </button>
                 </div>
                 <button className="sf-new-chat" onClick={createConversation}>
-                  <Plus size={14} />
-                  <span>
-                    <strong>新建对话</strong>
-                    <small>与 CEO 主控开始</small>
-                  </span>
-                  <kbd>⌘N</kbd>
+                  <Plus size={12} />
+                  <span>新建</span>
                 </button>
                 <label className="sf-search">
                   <Search size={13} />
