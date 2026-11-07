@@ -183,7 +183,7 @@ function LandingApp() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f7f4ed] text-[#17162d]">
+    <main className="landing-root min-h-screen overflow-hidden bg-[#f7f4ed] text-[#17162d]">
       <nav className="top-nav">
         <div className="nav-inner">
           <button className="brand" onClick={() => scrollTo("home")} aria-label="ShadowFlow 首页">

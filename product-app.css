@@ -1754,7 +1754,10 @@
     justify-content: space-between;
     margin-top: auto;
     border-top: 1px solid #ececeb;
-    padding-top: 11px;
+    border-radius: 0 0 14px 14px;
+    background: #fff;
+    color: #17162d;
+    padding: 11px 0;
   }
   .sf-agent-grid footer span {
     display: flex;
@@ -2437,6 +2440,261 @@
     padding: 8px 13px;
     font-size: 8px;
   }
+
+  /* ── 团队编排：工作流 DAG + 协作策略矩阵 + 审批门 ─────────────────── */
+  .sf-teamops {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 13px;
+    margin-top: 35px;
+  }
+  .sf-teamops-side {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+  }
+  .sf-teamops-panel {
+    border: 1px solid #dfdfdd;
+    border-radius: 14px;
+    background: #fff;
+    padding: 18px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.025);
+  }
+  .sf-teamops-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .sf-teamops-head > svg {
+    width: 14px;
+    height: 14px;
+    color: #ff5e3a;
+  }
+  .sf-teamops-head h3 {
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: -0.01em;
+  }
+  .sf-teamops-name {
+    margin-left: 4px;
+    color: #999;
+    font-size: 8px;
+  }
+  .sf-teamops-count {
+    margin-left: auto;
+    border: 1px solid #f3d9d1;
+    border-radius: 99px;
+    background: #fff3ef;
+    color: #ff5e3a;
+    padding: 3px 8px;
+    font: 500 7.5px "DM Mono";
+  }
+  .sf-teamops-sub {
+    margin-top: 4px;
+    color: #999;
+    font-size: 8px;
+  }
+  .sf-teamops-empty {
+    margin-top: 16px;
+    border: 1px dashed #e5e2da;
+    border-radius: 10px;
+    background: #fbfaf6;
+    color: #999;
+    font-size: 8.5px;
+    line-height: 1.7;
+    padding: 14px;
+  }
+  .sf-live-tag {
+    position: absolute;
+    top: -9px;
+    right: 10px;
+    border: 1px solid #d8d4ca;
+    border-radius: 99px;
+    background: #f4f1e9;
+    color: #8b867b;
+    padding: 3px 9px;
+    font: 500 7px "DM Mono";
+    letter-spacing: 0.08em;
+  }
+  .sf-live-tag.on {
+    border-color: #bfe8d9;
+    background: #edf9f4;
+    color: #0f9d6b;
+  }
+  .sf-dag-scroll {
+    margin-top: 14px;
+    overflow: auto;
+    border: 1px dashed #e5e2da;
+    border-radius: 10px;
+    background:
+      radial-gradient(#ecebe4 1px, transparent 1.2px) 0 0 / 16px 16px,
+      #fcfbf7;
+  }
+  .sf-dag-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-top: 11px;
+    color: #888;
+    font-size: 7.5px;
+  }
+  .sf-dag-legend i {
+    display: inline-block;
+    width: 14px;
+    height: 0;
+    border-top: 2px solid;
+    border-radius: 2px;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .sf-policy-grid {
+    display: grid;
+    gap: 5px;
+    margin-top: 14px;
+    align-items: center;
+  }
+  .sf-policy-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: #777;
+    font-size: 6.5px;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .sf-policy-head i {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 8px;
+    font-weight: 700;
+    font-style: normal;
+  }
+  .sf-policy-cell {
+    height: 26px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .sf-policy-cell:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 7px rgba(23, 22, 45, 0.18);
+  }
+  .sf-policy-cell.diag {
+    display: grid;
+    place-items: center;
+    cursor: default;
+    background: transparent;
+  }
+  .sf-policy-cell.diag s {
+    color: #ccc8bd;
+    font-size: 8px;
+  }
+  .sf-policy-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 13px;
+  }
+  .sf-policy-legend {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #888;
+    font-size: 7.5px;
+  }
+  .sf-policy-legend i {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    margin-left: 6px;
+  }
+  .sf-policy-legend i:first-child {
+    margin-left: 0;
+  }
+  .sf-policy-save {
+    margin-left: auto;
+    border-radius: 8px;
+    background: #17162d;
+    color: #fff;
+    padding: 7px 12px;
+    font-size: 8px;
+    font-weight: 700;
+  }
+  .sf-policy-save[disabled] {
+    opacity: 0.55;
+  }
+  .sf-policy-hint {
+    margin-left: auto;
+    color: #0f9d6b;
+    font-size: 8px;
+    font-weight: 600;
+  }
+  .sf-policy-hint.err {
+    color: #dc2626;
+  }
+  .sf-approve-list {
+    margin-top: 6px;
+  }
+  .sf-approve-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid #f0efec;
+    padding: 10px 0;
+  }
+  .sf-approve-item:first-child {
+    border-top: none;
+  }
+  .sf-approve-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .sf-approve-body strong {
+    display: block;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  .sf-approve-body span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #999;
+    font-size: 7.5px;
+    margin-top: 2px;
+  }
+  .sf-approve-wait {
+    color: #b0aca2;
+    font: 500 7.5px "DM Mono";
+  }
+  .sf-approve-btn {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+  }
+  .sf-approve-btn:hover {
+    transform: scale(1.12);
+  }
+  .sf-approve-btn.ok {
+    background: #16a34a;
+  }
+  .sf-approve-btn.no {
+    background: #dc2626;
+  }
 }
 
 @media (max-width: 1050px) {
@@ -2446,6 +2704,9 @@
   }
   .sf-agent-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .sf-teamops {
+    grid-template-columns: 1fr;
   }
   .sf-metric-grid {
     grid-template-columns: repeat(3, 1fr);
