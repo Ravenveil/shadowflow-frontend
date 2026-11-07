@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   BarChart3,
@@ -28,6 +28,13 @@ import {
   WalletCards,
   X,
   Zap,
+  AlertTriangle,
+  Clock,
+  Download,
+  Pin,
+  Play,
+  RotateCcw,
+  Square,
 } from "lucide-react";
 import "./product-app.css";
 
@@ -585,96 +592,7 @@ export default function ProductApp() {
             </section>
 
             {detailOpen && (
-              <aside className="sf-run-panel">
-                <div className="sf-run-head">
-                  <strong>执行详情</strong>
-                  <button onClick={() => setDetailOpen(false)}>
-                    <X size={16} />
-                  </button>
-                </div>
-                <div className="sf-run-card">
-                  <div>
-                    <span>
-                      <Zap size={17} />
-                    </span>
-                    <div>
-                      <small>ACTIVE RUN</small>
-                      <strong>Atlas 新品发布</strong>
-                    </div>
-                    <em>68%</em>
-                  </div>
-                  <div className="sf-progress">
-                    <i />
-                  </div>
-                  <p>3 / 4 个 Agent 已响应</p>
-                </div>
-                <div className="sf-panel-section">
-                  <div className="sf-panel-title">
-                    <span>当前团队</span>
-                    <button>管理</button>
-                  </div>
-                  {agents.map((agent) => (
-                    <div className="sf-agent-row" key={agent.name}>
-                      <AgentAvatar label={agent.initials} color={agent.color} small />
-                      <div>
-                        <strong>{agent.name}</strong>
-                        <small>{agent.role}</small>
-                      </div>
-                      <span className={agent.status === "执行中" ? "running" : ""}>
-                        {agent.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="sf-panel-section">
-                  <div className="sf-panel-title">
-                    <span>流程</span>
-                    <button>查看 DAG</button>
-                  </div>
-                  <div className="sf-mini-flow">
-                    <div className="done">
-                      <span>
-                        <Check size={11} />
-                      </span>
-                      <p>
-                        <strong>研究</strong>
-                        <small>10:31 完成</small>
-                      </p>
-                    </div>
-                    <i />
-                    <div className="running">
-                      <span>2</span>
-                      <p>
-                        <strong>策略</strong>
-                        <small>正在执行</small>
-                      </p>
-                    </div>
-                    <i />
-                    <div>
-                      <span>3</span>
-                      <p>
-                        <strong>内容</strong>
-                        <small>等待输入</small>
-                      </p>
-                    </div>
-                    <i />
-                    <div>
-                      <span>4</span>
-                      <p>
-                        <strong>审核</strong>
-                        <small>由你确认</small>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="sf-policy-note">
-                  <ShieldCheck size={16} />
-                  <div>
-                    <strong>人工审核已开启</strong>
-                    <small>关键策略不会未经确认直接执行</small>
-                  </div>
-                </div>
-              </aside>
+              <RunPanel onClose={() => setDetailOpen(false)} />
             )}
           </div>
         )}
@@ -687,6 +605,476 @@ export default function ProductApp() {
         {view === "settings" && <SettingsView />}
       </main>
     </div>
+  );
+}
+
+
+const RUN_STATUS_TEXT: Record<string, string> = {
+  done: "已完成",
+  running: "执行中",
+  pending: "等待中",
+  failed: "失败",
+};
+
+type RunStep = {
+  name: string;
+  status: "done" | "running" | "pending";
+  meta: string;
+  substeps: { agent: string; slot: string; status: "done" | "running" | "pending" }[];
+};
+
+const RUN_STEPS: RunStep[] = [
+  {
+    name: "研究",
+    status: "done",
+    meta: "10:31 完成 · 4m 12s",
+    substeps: [
+      { agent: "市场研究员", slot: "竞品扫描与人群洞察", status: "done" },
+      { agent: "总经理", slot: "任务拆解与派发", status: "done" },
+    ],
+  },
+  {
+    name: "策略",
+    status: "running",
+    meta: "正在执行 · 2m 47s",
+    substeps: [
+      { agent: "品牌策略师", slot: "定位与主张草案", status: "running" },
+      { agent: "总经理", slot: "方案汇总复核", status: "pending" },
+    ],
+  },
+  {
+    name: "内容",
+    status: "pending",
+    meta: "等待策略产出",
+    substeps: [{ agent: "内容创意", slot: "渠道排期与创意", status: "pending" }],
+  },
+  {
+    name: "审核",
+    status: "pending",
+    meta: "由你确认",
+    substeps: [{ agent: "人工审核", slot: "品牌主张终审", status: "pending" }],
+  },
+];
+
+const RUN_DAG = {
+  nodes: [
+    { name: "研究", kind: "task" },
+    { name: "策略", kind: "task" },
+    { name: "内容", kind: "task" },
+    { name: "审核", kind: "approve" },
+  ],
+  edges: [
+    { from: "研究", to: "策略", mode: "顺序" },
+    { from: "策略", to: "内容", mode: "顺序" },
+    { from: "内容", to: "审核", mode: "approve · 人工门" },
+  ],
+};
+
+type ApprovalItem = {
+  id: string;
+  from: string;
+  label: string;
+  color: string;
+  summary: string;
+  when: string;
+  state: "pending" | "approved" | "rejected";
+  reason?: string;
+};
+
+const RUN_APPROVALS: ApprovalItem[] = [
+  {
+    id: "ap1",
+    from: "品牌策略师",
+    label: "BS",
+    color: "#d97b38",
+    summary: "Atlas 品牌主张 v2 定稿（含 slogan 3 选 1）",
+    when: "已等待 8 分钟",
+    state: "pending",
+  },
+  {
+    id: "ap0",
+    from: "总经理",
+    label: "GM",
+    color: "#ff5e3a",
+    summary: "竞品研究口径与数据源确认",
+    when: "12 分钟前",
+    state: "approved",
+  },
+  {
+    id: "ap-1",
+    from: "内容创意",
+    label: "CC",
+    color: "#c64f7d",
+    summary: "Q2 渠道预算追加 5 万",
+    when: "26 分钟前",
+    state: "rejected",
+    reason: "预算超限，请拆分到下季度再提",
+  },
+];
+
+type ArtifactItem = {
+  id: string;
+  name: string;
+  type: string;
+  summary: string;
+  size: string;
+  pinned: boolean;
+};
+
+const RUN_ARTIFACTS: ArtifactItem[] = [
+  {
+    id: "ar1",
+    name: "atlas-brand-proposal.yaml",
+    type: "yaml",
+    summary: "定位与主张草案 · 品牌策略师",
+    size: "12 KB",
+    pinned: true,
+  },
+  {
+    id: "ar2",
+    name: "competitor-brief.md",
+    type: "markdown",
+    summary: "竞品简报 · 市场研究员",
+    size: "34 KB",
+    pinned: false,
+  },
+  {
+    id: "ar3",
+    name: "campaign-calendar.html",
+    type: "html",
+    summary: "投放排期预览 · 内容创意",
+    size: "18 KB",
+    pinned: false,
+  },
+];
+
+const TEAM_LIVE: Record<string, { sub: string; usage: string }> = {
+  总经理: { sub: "汇总复核策略方案", usage: "本轮 4.2k tokens · ¥0.004" },
+  市场研究员: { sub: "已交付竞品简报", usage: "本轮 6.1k tokens · ¥0.005" },
+  品牌策略师: { sub: "起草定位与主张草案", usage: "本轮 3.8k tokens · ¥0.003" },
+  内容创意: { sub: "等待策略产出后启动", usage: "本轮 0 tokens · ¥0.000" },
+};
+
+function fmtElapsed(ms: number): string {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  if (totalSec < 60) return `${totalSec}s`;
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  if (m < 60) return `${m}m ${s}s`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}m`;
+}
+
+function RunPanel({ onClose }: { onClose: () => void }) {
+  const [tab, setTab] = useState<"flow" | "team" | "approval" | "artifacts">("flow");
+  const [runState, setRunState] = useState<"running" | "stopped">("running");
+  const [startedAt] = useState(() => Date.now() - 754_000);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const [steps, setSteps] = useState<RunStep[]>(RUN_STEPS);
+  const [approvals, setApprovals] = useState<ApprovalItem[]>(RUN_APPROVALS);
+  const [artifacts, setArtifacts] = useState<ArtifactItem[]>(RUN_ARTIFACTS);
+  const [dagOpen, setDagOpen] = useState(false);
+  const [openAgent, setOpenAgent] = useState<string | null>(null);
+  const [reasonFor, setReasonFor] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (runState !== "running") return;
+    const t = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [runState]);
+
+  const elapsed = fmtElapsed(runState === "running" ? nowMs - startedAt : 754_000);
+  const pendingCount = approvals.filter((a) => a.state === "pending").length;
+
+  const retryStep = (name: string) => {
+    setSteps((all) =>
+      all.map((x) => (x.name === name ? { ...x, status: "running" as const, meta: "重跑中…" } : x)),
+    );
+    window.setTimeout(() => {
+      setSteps((all) =>
+        all.map((x) => (x.name === name ? { ...x, status: "done" as const, meta: "刚刚 完成 · 4m 12s" } : x)),
+      );
+    }, 1800);
+  };
+
+  const rerunAll = () => {
+    setSteps((all) =>
+      all.map((x) => (x.status === "done" ? { ...x, status: "running" as const, meta: "重跑中…" } : x)),
+    );
+    window.setTimeout(() => {
+      setSteps((all) =>
+        all.map((x) =>
+          x.status === "running" ? { ...x, status: "done" as const, meta: "刚刚 完成 · 4m 12s" } : x,
+        ),
+      );
+    }, 2200);
+  };
+
+  const resolveApproval = (id: string, state: "approved" | "rejected") => {
+    setApprovals((all) =>
+      all.map((x) =>
+        x.id === id
+          ? {
+              ...x,
+              state,
+              when: "刚刚",
+              reason: state === "rejected" ? reason.trim() || "需要补充依据后再提交" : undefined,
+            }
+          : x,
+      ),
+    );
+    setReasonFor(null);
+    setReason("");
+  };
+
+  return (
+    <aside className="sf-run-panel">
+      <div className="sf-run-head">
+        <strong>执行详情</strong>
+        <button onClick={onClose}>
+          <X size={16} />
+        </button>
+      </div>
+
+      <div className="sf-run-card">
+        <div>
+          <span>
+            <Zap size={17} />
+          </span>
+          <div>
+            <small>ACTIVE RUN</small>
+            <strong>Atlas 新品发布</strong>
+          </div>
+          <em>68%</em>
+        </div>
+        <div className="sf-progress">
+          <i />
+        </div>
+        <p>3 / 4 个 Agent 已响应</p>
+        <div className="sf-run-meta">
+          <span className={`sf-run-pill ${runState}`}>{runState === "running" ? "运行中" : "已中断"}</span>
+          <span className="sf-run-ticker">
+            <Clock size={9} />
+            {elapsed}
+          </span>
+          <span className="sf-run-cost">¥0.012</span>
+        </div>
+        <div className="sf-run-actions">
+          {runState === "running" ? (
+            <button className="sf-mini-btn danger" onClick={() => setRunState("stopped")}>
+              <Square size={8} /> 停止
+            </button>
+          ) : (
+            <button className="sf-mini-btn ok" onClick={() => setRunState("running")}>
+              <Play size={8} /> 继续执行
+            </button>
+          )}
+          <button className="sf-mini-btn" onClick={rerunAll}>
+            <RotateCcw size={8} /> 重跑
+          </button>
+        </div>
+      </div>
+
+      <div className="sf-run-tabs">
+        <button className={tab === "flow" ? "on" : ""} onClick={() => setTab("flow")}>
+          过程
+        </button>
+        <button className={tab === "team" ? "on" : ""} onClick={() => setTab("team")}>
+          团队
+        </button>
+        <button className={tab === "approval" ? "on" : ""} onClick={() => setTab("approval")}>
+          审批{pendingCount > 0 ? <em>{pendingCount}</em> : null}
+        </button>
+        <button className={tab === "artifacts" ? "on" : ""} onClick={() => setTab("artifacts")}>
+          产物
+        </button>
+      </div>
+
+      {tab === "flow" && (
+        <div className="sf-panel-section">
+          <div className="sf-panel-title">
+            <span>步骤 · 4</span>
+            <button onClick={() => setDagOpen(!dagOpen)}>{dagOpen ? "收起 DAG" : "查看 DAG"}</button>
+          </div>
+          <div className="sf-step-tree">
+            {steps.map((step, idx) => (
+              <div key={step.name}>
+                <div className={`sf-step-row ${step.status}`}>
+                  <span className="sf-step-dot">
+                    {step.status === "done" ? (
+                      <Check size={9} />
+                    ) : step.status === "running" ? (
+                      <RotateCcw size={9} className="sf-spin" />
+                    ) : (
+                      idx + 1
+                    )}
+                  </span>
+                  <div>
+                    <strong>{step.name}</strong>
+                    <small>{step.meta}</small>
+                  </div>
+                  {step.status === "done" && (
+                    <button className="sf-retry" onClick={() => retryStep(step.name)}>
+                      <RotateCcw size={8} /> 重跑
+                    </button>
+                  )}
+                  {step.status === "running" && <span className="sf-step-live">执行中</span>}
+                </div>
+                {step.substeps.map((sub) => (
+                  <div className="sf-step-sub" key={sub.slot}>
+                    <span />
+                    <p>
+                      {sub.agent} · {sub.slot}
+                    </p>
+                    <em className={sub.status}>{RUN_STATUS_TEXT[sub.status]}</em>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+          {dagOpen && (
+            <div className="sf-dag-rail">
+              {RUN_DAG.nodes.map((node, idx) => (
+                <div key={node.name}>
+                  <div className="sf-dag-node">
+                    <span className={idx === 0 ? "entry" : ""} />
+                    <strong>{node.name}</strong>
+                    <em>{node.kind === "approve" ? "approve · 人工门" : "task"}</em>
+                  </div>
+                  {idx < RUN_DAG.edges.length && <p className="sf-dag-edge">↓ {RUN_DAG.edges[idx].mode}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "team" && (
+        <div className="sf-panel-section">
+          <div className="sf-panel-title">
+            <span>当前团队</span>
+            <button>管理</button>
+          </div>
+          {agents.map((agent) => (
+            <div key={agent.name}>
+              <button className="sf-agent-row" onClick={() => setOpenAgent(openAgent === agent.name ? null : agent.name)}>
+                <AgentAvatar label={agent.initials} color={agent.color} small />
+                <div>
+                  <strong>{agent.name}</strong>
+                  <small>{agent.role}</small>
+                </div>
+                <span className={agent.status === "执行中" ? "running" : ""}>{agent.status}</span>
+              </button>
+              {openAgent === agent.name && (
+                <div className="sf-expand-card">
+                  <p>当前：{TEAM_LIVE[agent.name]?.sub ?? "—"}</p>
+                  <p className="mono">{TEAM_LIVE[agent.name]?.usage ?? "—"}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "approval" && (
+        <div className="sf-panel-section">
+          <div className="sf-panel-title">
+            <span>人工审批门</span>
+            <button>{pendingCount} 项待审批</button>
+          </div>
+          {approvals.map((ap) => (
+            <div className={`sf-appr-card ${ap.state}`} key={ap.id}>
+              <div className="sf-appr-head">
+                <AgentAvatar label={ap.label} color={ap.color} small />
+                <div>
+                  <strong>{ap.summary}</strong>
+                  <small>
+                    {ap.from} · {ap.when}
+                  </small>
+                </div>
+              </div>
+              {ap.state === "pending" ? (
+                <>
+                  <div className="sf-appr-actions">
+                    <button className="ok" onClick={() => resolveApproval(ap.id, "approved")}>
+                      <Check size={9} /> 批准
+                    </button>
+                    <button className="no" onClick={() => setReasonFor(reasonFor === ap.id ? null : ap.id)}>
+                      <X size={9} /> 驳回
+                    </button>
+                  </div>
+                  {reasonFor === ap.id && (
+                    <div className="sf-appr-reason">
+                      <input
+                        value={reason}
+                        onChange={(e: FormEvent<HTMLInputElement>) => setReason(e.currentTarget.value)}
+                        placeholder="驳回理由（可选）"
+                      />
+                      <button className="no" onClick={() => resolveApproval(ap.id, "rejected")}>
+                        确认驳回
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="sf-appr-log">
+                  {ap.state === "approved" ? "✅ 已批准" : "❌ 已驳回"}
+                  {ap.reason ? ` · ${ap.reason}` : ""}
+                </div>
+              )}
+            </div>
+          ))}
+          <div className="sf-policy-note">
+            <ShieldCheck size={16} />
+            <div>
+              <strong>人工审核已开启</strong>
+              <small>关键策略不会未经确认直接执行</small>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === "artifacts" && (
+        <div className="sf-panel-section">
+          <div className="sf-panel-title">
+            <span>产物 · {artifacts.length}</span>
+            <button>全部下载</button>
+          </div>
+          {artifacts.map((art) => (
+            <div className="sf-art-row" key={art.id}>
+              <span className="sf-art-icon">
+                <FileText size={11} />
+              </span>
+              <div>
+                <strong>{art.name}</strong>
+                <small>
+                  {art.type} · {art.size} · {art.summary}
+                </small>
+              </div>
+              <div className="sf-art-actions">
+                <button
+                  className={art.pinned ? "pin on" : "pin"}
+                  title={art.pinned ? "取消置顶" : "置顶"}
+                  onClick={() =>
+                    setArtifacts((all) =>
+                      all.map((x) => (x.id === art.id ? { ...x, pinned: !x.pinned } : x)),
+                    )
+                  }
+                >
+                  <Pin size={9} />
+                </button>
+                <button title="下载">
+                  <Download size={9} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="sf-run-foot">8 tools · 12.4k tokens · ¥0.012</div>
+    </aside>
   );
 }
 
