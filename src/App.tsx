@@ -924,7 +924,7 @@ type DemoEvent =
   | { kind: "done"; text: string };
 
 const sampleTeam = [
-  ["CEO 主控", "对话问需 · 组建调度团队"],
+  ["董事长", "对话问需 · 组建调度团队"],
   ["内容官", "媒体平台发帖介绍"],
   ["上架专员", "生成并上架商品链接"],
   ["订单跟踪", "同步订单状态"],
@@ -935,7 +935,7 @@ const sampleTeam = [
 const demoEvents: DemoEvent[] = [
   {
     kind: "ceo",
-    text: "你好，我是 CEO 主控 👋 想帮你的作品找到更多买家。请把产品发给我——文字介绍、产品图片或产品文档都可以。",
+    text: "你好，我是 董事长 👋 想帮你的作品找到更多买家。请把产品发给我——文字介绍、产品图片或产品文档都可以。",
   },
   {
     kind: "user",
@@ -1017,7 +1017,7 @@ function renderDemoEvent(event: DemoEvent, index: number) {
           <BriefcaseBusiness size={15} />
         </span>
         <div>
-          <small>CEO 主控</small>
+          <small>董事长</small>
           <p>{event.text}</p>
         </div>
       </div>

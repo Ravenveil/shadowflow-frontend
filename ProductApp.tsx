@@ -72,7 +72,7 @@ type Conversation = {
 
 const ceoConversation: Conversation = {
   id: "ceo",
-  title: "CEO 主控",
+  title: "董事长",
   preview: "全局调度 · 任务拆解与决策",
   time: "刚刚",
   unread: true,
@@ -126,14 +126,14 @@ const threadScripts: Record<Exclude<ThreadKind, "atlas" | "fresh">, { user: stri
     replies: [
       {
         label: "CEO",
-        name: "CEO 主控",
+        name: "董事长",
         color: "#ff5e3a",
         time: "10:26",
         text: "三个项目并行推进：Atlas 发布已进入人工审核环节，Q2 内容增长完成渠道排期，客户提案自动化在等待预算输入。建议今天优先敲定 Atlas 的品牌主张，其余两条线按计划自动推进。",
       },
       {
         label: "CEO",
-        name: "CEO 主控",
+        name: "董事长",
         color: "#ff5e3a",
         time: "10:27",
         text: "需要调整优先级或临时加塞任务，直接在这里说一声，我会重新拆解并调度团队。",
@@ -231,7 +231,7 @@ export default function ProductApp() {
 
   const chatStatusText =
     activeConversation.thread === "ceo"
-      ? "CEO 主控在线 · 全局调度"
+      ? "董事长在线 · 全局调度"
       : activeConversation.thread === "fresh"
         ? "新对话 · 等待你的第一条指令"
         : "3 位 Agent 正在协作";
@@ -425,7 +425,7 @@ export default function ProductApp() {
             {view === "chat" && (
               <button className="sf-members">
                 {activeConversation.thread === "ceo" || activeConversation.thread === "fresh" ? (
-                  <span>CEO</span>
+                  <span>董</span>
                 ) : (
                   <>
                     <span>GM</span>
@@ -485,7 +485,7 @@ export default function ProductApp() {
                 >
                   <AgentAvatar label="CEO" color="#ff5e3a" size="lg" />
                   <div>
-                    <strong>CEO 主控</strong>
+                    <strong>董事长</strong>
                     <small>全局调度 · 任务拆解与决策</small>
                   </div>
                   <i />
@@ -557,7 +557,7 @@ export default function ProductApp() {
                   }}
                   placeholder={
                     activeConversation.thread === "ceo"
-                      ? "直接和 CEO 对话，或让它调度团队…"
+                      ? "直接和董事长对话，或让它调度团队…"
                       : activeConversation.thread === "fresh"
                         ? "告诉团队接下来要做什么…"
                         : "继续这个会话…"
@@ -1129,7 +1129,7 @@ function CeoHero({ onQuick }: { onQuick: (text: string) => void }) {
   return (
     <div className="sf-ceo-hero">
       <AgentAvatar label="CEO" color="#ff5e3a" size="xl" />
-      <h2>CEO 主控</h2>
+      <h2>董事长</h2>
       <p>
         <i /> 在线 · 全局调度、任务拆解与决策
       </p>
@@ -1277,7 +1277,7 @@ function ChatThread({
               </>
             ) : (
               <>
-                <strong>CEO 主控</strong> 正在拆解任务并调度团队
+                <strong>董事长</strong> 正在拆解任务并调度团队
               </>
             )}
           </p>
@@ -1555,7 +1555,7 @@ function SfDagPanel({ team, matrix }: { team: SfTeamDag; matrix: PolicyMatrix })
             let ly: number;
             if (backward) {
               // 回边（驳回回炉）：下弧线绕过中间列，避免横穿节点
-              const drop = Math.max(...pos.values().map((p) => p.y)) + NH + 26;
+              const drop = Math.max(...Array.from(pos.values()).map((p) => p.y)) + NH + 26;
               d = `M ${x1} ${y1} C ${x1} ${drop}, ${x2} ${drop}, ${x2} ${y2}`;
               lx = (x1 + x2) / 2;
               ly = drop + 9;
@@ -1946,7 +1946,28 @@ function AgentsView() {
   );
 }
 
+type SfPackCard = { pack_id?: string; name?: string; title?: string; description?: string; source_count?: number };
+
 function KnowledgeView() {
+  const [packs, setPacks] = useState<SfPackCard[] | null>(null);
+  useEffect(() => {
+    sfFetch<{ packs?: SfPackCard[] }>("/api/memory-bank/packs")
+      .then((d) => setPacks(Array.isArray(d?.packs) ? d.packs : []))
+      .catch(() => setPacks(null));
+  }, []);
+  const cards: Array<[string, string, string, string]> =
+    packs === null || packs.length === 0
+      ? [
+          ["品牌空间", "Atlas Brand Hub", "品牌定位、语调、受众与核心产品信息。", "12 份文档"],
+          ["项目资料", "新品发布研究", "市场、竞品与用户访谈的结构化资料。", "24 个来源"],
+          ["方法论", "营销交付 SOP", "团队使用的流程模板与质量标准。", "8 个流程"],
+        ]
+      : packs.slice(0, 6).map((p) => [
+          "知识包",
+          p.name || p.title || (p.pack_id ? p.pack_id.slice(0, 8) : "未命名"),
+          p.description || "团队共享知识包。",
+          p.source_count != null ? `${p.source_count} 个来源` : "知识包",
+        ]);
   return (
     <section className="sf-subview">
       <div className="sf-subview-intro">
@@ -2015,37 +2036,20 @@ function KnowledgeView() {
           ))}
         </svg>
       </div>
+      {packs === null && <p className="sf-live-tag">演示数据 · 后端未连接</p>}
       <div className="sf-knowledge-layout">
-        <div className="sf-knowledge-card featured">
-          <BookOpen />
-          <small>品牌空间</small>
-          <h2>Atlas Brand Hub</h2>
-          <p>品牌定位、语调、受众与核心产品信息。</p>
-          <footer>
-            <span>12 份文档</span>
-            <span>刚刚更新</span>
-          </footer>
-        </div>
-        <div className="sf-knowledge-card">
-          <FileText />
-          <small>项目资料</small>
-          <h2>新品发布研究</h2>
-          <p>市场、竞品与用户访谈的结构化资料。</p>
-          <footer>
-            <span>24 个来源</span>
-            <span>2 小时前</span>
-          </footer>
-        </div>
-        <div className="sf-knowledge-card">
-          <GitBranch />
-          <small>方法论</small>
-          <h2>营销交付 SOP</h2>
-          <p>团队使用的流程模板与质量标准。</p>
-          <footer>
-            <span>8 个流程</span>
-            <span>昨天</span>
-          </footer>
-        </div>
+        {cards.map(([tag, title, desc, count], i) => (
+          <div key={title} className={`sf-knowledge-card${i === 0 ? " featured" : ""}`}>
+            {i === 0 ? <BookOpen /> : i === 1 ? <FileText /> : <GitBranch />}
+            <small>{tag}</small>
+            <h2>{title}</h2>
+            <p>{desc}</p>
+            <footer>
+              <span>{count}</span>
+              <span>{i === 0 ? "刚刚更新" : i === 1 ? "2 小时前" : "昨天"}</span>
+            </footer>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -2167,8 +2171,8 @@ function DashboardView() {
         return breakdown.slice(0, 5).map((row) => [
           row.model ?? row.label ?? "—",
           String(row.calls ?? "—"),
-          row.total_tokens >= 1e6
-            ? `${(row.total_tokens / 1e6).toFixed(2)}M`
+          (row.total_tokens ?? 0) >= 1e6
+            ? `${((row.total_tokens ?? 0) / 1e6).toFixed(2)}M`
             : `${Math.round((row.total_tokens ?? 0) / 1e3)}k`,
           `$${(row.cost_est_usd ?? 0).toFixed(2)}`,
           `${Math.round(((row.total_tokens ?? 0) / totalTokens) * 100)}%`,
@@ -2426,6 +2430,26 @@ function DashboardView() {
 
 function ProjectsView() {
   const [showCreate, setShowCreate] = useState(false);
+  const [liveProjects, setLiveProjects] = useState<SfProject[] | null>(null);
+  useEffect(() => {
+    sfFetch<SfProject[]>("/api/projects?withSessions=1")
+      .then((list) => setLiveProjects(Array.isArray(list) ? list : []))
+      .catch(() => setLiveProjects(null));
+  }, []);
+  const cards: Array<[string, string, string, string, string]> =
+    liveProjects === null
+      ? [
+          ["Atlas 新品发布", "4 位 Agent · 8 个会话", "68%", "#ff5e3a", "今天"],
+          ["Q2 内容增长", "3 位 Agent · 12 个会话", "42%", "#00a594", "今天"],
+          ["客户提案自动化", "2 位 Agent · 5 个会话", "86%", "#8e6cff", "今天"],
+        ]
+      : liveProjects.map((p, i) => [
+          p.name,
+          `${(p.sessions ?? []).length} 个会话`,
+          "",
+          ["#ff5e3a", "#00a594", "#8e6cff", "#d97b38", "#c64f7d"][i % 5],
+          p.updated_at ? String(p.updated_at).slice(0, 10) : "最近",
+        ]);
   return (
     <section className="sf-subview">
       <div className="sf-subview-intro">
@@ -2438,6 +2462,7 @@ function ProjectsView() {
           <Plus size={15} /> 新建项目
         </button>
       </div>
+      {liveProjects === null && <p className="sf-live-tag">演示数据 · 后端未连接</p>}
       {showCreate && (
         <form
           className="sf-inline-create"
@@ -2455,11 +2480,7 @@ function ProjectsView() {
         </form>
       )}
       <div className="sf-project-grid">
-        {[
-          ["Atlas 新品发布", "4 位 Agent · 8 个会话", "68%", "#ff5e3a"],
-          ["Q2 内容增长", "3 位 Agent · 12 个会话", "42%", "#00a594"],
-          ["客户提案自动化", "2 位 Agent · 5 个会话", "86%", "#8e6cff"],
-        ].map(([name, meta, progress, color]) => (
+        {cards.map(([name, meta, progress, color, updated]) => (
           <article key={name}>
             <header>
               <span style={{ background: color }}>
@@ -2471,14 +2492,16 @@ function ProjectsView() {
             </header>
             <h2>{name}</h2>
             <p>{meta}</p>
-            <div>
-              <span>
-                <i style={{ width: progress, background: color }} />
-              </span>
-              <strong>{progress}</strong>
-            </div>
+            {progress ? (
+              <div>
+                <span>
+                  <i style={{ width: progress, background: color }} />
+                </span>
+                <strong>{progress}</strong>
+              </div>
+            ) : null}
             <footer>
-              <span>最近更新：今天</span>
+              <span>最近更新：{updated}</span>
               <button>
                 打开项目 <ChevronRight size={14} />
               </button>
@@ -2490,33 +2513,53 @@ function ProjectsView() {
   );
 }
 
+type SfScheduleRow = {
+  schedule_id: string;
+  task_description: string;
+  agent_id?: string | null;
+  cron_expression?: string | null;
+  start_at?: string | null;
+  next_run_time?: string | null;
+  enabled: boolean;
+};
+
 function SchedulesView() {
-  const [scheduleRows, setScheduleRows] = useState([
-    {
-      id: 1,
-      name: "每天生成竞品动态简报",
-      agent: "市场研究员",
-      cron: "每天 09:00",
-      next: "明天 09:00",
-      enabled: true,
-    },
-    {
-      id: 2,
-      name: "汇总本周内容数据",
-      agent: "内容创意",
-      cron: "每周五 18:00",
-      next: "周五 18:00",
-      enabled: true,
-    },
-    {
-      id: 3,
-      name: "检查品牌舆情风险",
-      agent: "品牌策略师",
-      cron: "每 6 小时",
-      next: "今天 16:00",
-      enabled: false,
-    },
-  ]);
+  const demoRows: Array<{ id: string; name: string; agent: string; cron: string; next: string; enabled: boolean }> = [
+    { id: "demo-1", name: "每天生成竞品动态简报", agent: "市场研究员", cron: "每天 09:00", next: "明天 09:00", enabled: true },
+    { id: "demo-2", name: "汇总本周内容数据", agent: "内容创意", cron: "每周五 18:00", next: "周五 18:00", enabled: true },
+    { id: "demo-3", name: "检查品牌舆情风险", agent: "品牌策略师", cron: "每 6 小时", next: "今天 16:00", enabled: false },
+  ];
+  const [rows, setRows] = useState(demoRows);
+  const [live, setLive] = useState(false);
+  useEffect(() => {
+    sfFetch<SfScheduleRow[]>("/api/schedules")
+      .then((list) => {
+        if (!Array.isArray(list)) return;
+        setRows(
+          list.map((r) => ({
+            id: r.schedule_id,
+            name: r.task_description || r.schedule_id,
+            agent: r.agent_id || "自动调度",
+            cron: r.cron_expression || (r.start_at ? `一次性 · ${String(r.start_at).slice(0, 16).replace("T", " ")}` : "—"),
+            next: r.next_run_time ? String(r.next_run_time).slice(0, 16).replace("T", " ") : "待触发",
+            enabled: !!r.enabled,
+          })),
+        );
+        setLive(true);
+      })
+      .catch(() => setLive(false));
+  }, []);
+  function toggle(index: number) {
+    const row = rows[index];
+    setRows((prev) => prev.map((r, i) => (i === index ? { ...r, enabled: !r.enabled } : r)));
+    if (live) {
+      sfFetch(`/api/schedules/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !row.enabled }),
+      }).catch(() => setRows((prev) => prev.map((r, i) => (i === index ? row : r))));
+    }
+  }
   return (
     <section className="sf-subview">
       <div className="sf-subview-intro">
@@ -2529,8 +2572,9 @@ function SchedulesView() {
           <Plus size={15} /> 创建定时任务
         </button>
       </div>
+      {!live && <p className="sf-live-tag">演示数据 · 后端未连接</p>}
       <div className="sf-schedule-list">
-        {scheduleRows.map((schedule, index) => (
+        {rows.map((schedule, index) => (
           <article key={schedule.id} className={schedule.enabled ? "" : "disabled"}>
             <span className="sf-schedule-icon">
               <CalendarClock size={18} />
@@ -2546,13 +2590,7 @@ function SchedulesView() {
             </span>
             <button
               className={`sf-switch ${schedule.enabled ? "on" : ""}`}
-              onClick={() =>
-                setScheduleRows((rows) =>
-                  rows.map((row, rowIndex) =>
-                    rowIndex === index ? { ...row, enabled: !row.enabled } : row,
-                  ),
-                )
-              }
+              onClick={() => toggle(index)}
               aria-label={schedule.enabled ? "停用任务" : "启用任务"}
             >
               <i />
@@ -2567,9 +2605,562 @@ function SchedulesView() {
   );
 }
 
+type ByokProviderData = {
+  apiKey: string;
+  baseUrl: string;
+  models: string[];
+  enabled: boolean;
+  type?: string;
+  syncedModels?: string[];
+  manualModels?: string[];
+};
+type ByokStoreData = {
+  providers: Record<string, ByokProviderData>;
+  defaultModel: string | null;
+  routingPriority: string;
+};
+type SfProject = {
+  project_id: string;
+  name: string;
+  sessions?: unknown[];
+  updated_at?: string | number | null;
+};
+
+const BYOK_META: Record<
+  string,
+  { name: string; short: string; tint: string; monogram: string; defaultUrl: string; keyPlaceholder: string; noKey: boolean; docsUrl: string }
+> = {
+  mimo:      { name: "Xiaomi MiMo",     short: "MiMo V2.6 / V2.5",    tint: "#FF6900", monogram: "MI", defaultUrl: "https://api.xiaomimimo.com/v1",                     keyPlaceholder: "sk-…",  noKey: false, docsUrl: "https://platform.xiaomimimo.com/" },
+  anthropic: { name: "Anthropic",       short: "Claude family",       tint: "#D97706", monogram: "A",  defaultUrl: "https://api.anthropic.com",                         keyPlaceholder: "sk-ant-…", noKey: false, docsUrl: "https://console.anthropic.com/settings/keys" },
+  openai:    { name: "OpenAI",          short: "GPT family",          tint: "#10B981", monogram: "O",  defaultUrl: "https://api.openai.com/v1",                         keyPlaceholder: "sk-…",  noKey: false, docsUrl: "https://platform.openai.com/api-keys" },
+  google:    { name: "Google Gemini",   short: "Gemini family",       tint: "#4285F4", monogram: "G",  defaultUrl: "https://generativelanguage.googleapis.com/v1beta",  keyPlaceholder: "AIza…", noKey: false, docsUrl: "https://aistudio.google.com/app/apikey" },
+  deepseek:  { name: "DeepSeek",        short: "V3 / R1",             tint: "#3D8BFD", monogram: "DS", defaultUrl: "https://api.deepseek.com",                          keyPlaceholder: "sk-…",  noKey: false, docsUrl: "https://platform.deepseek.com/api_keys" },
+  zhipu:     { name: "Zhipu GLM",       short: "GLM-4 family",        tint: "#1447E6", monogram: "ZP", defaultUrl: "https://open.bigmodel.cn/api/paas/v4",              keyPlaceholder: "xxxx.yyyyyy", noKey: false, docsUrl: "https://open.bigmodel.cn/usercenter/apikeys" },
+  qwen:      { name: "Qwen · Alibaba",  short: "Alibaba Bailian",     tint: "#1447E6", monogram: "Qw", defaultUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1", keyPlaceholder: "sk-…",  noKey: false, docsUrl: "https://bailian.console.aliyun.com/?apiKey=1" },
+  moonshot:  { name: "Moonshot · Kimi", short: "K2 / K1.5",           tint: "#06B6D4", monogram: "MK", defaultUrl: "https://api.moonshot.cn/v1",                        keyPlaceholder: "sk-…",  noKey: false, docsUrl: "https://platform.moonshot.cn/console/api-keys" },
+  mistral:   { name: "Mistral",         short: "Large 2 · Codestral", tint: "#FB923C", monogram: "Mi", defaultUrl: "https://api.mistral.ai/v1",                         keyPlaceholder: "sk-…",  noKey: false, docsUrl: "https://console.mistral.ai/api-keys/" },
+  groq:      { name: "Groq",            short: "LPU inference",       tint: "#F97316", monogram: "Gr", defaultUrl: "https://api.groq.com/openai/v1",                    keyPlaceholder: "gsk_…", noKey: false, docsUrl: "https://console.groq.com/keys" },
+  azure:     { name: "Azure OpenAI",    short: "Enterprise",          tint: "#0078D4", monogram: "Az", defaultUrl: "https://{deployment}.openai.azure.com",             keyPlaceholder: "…",     noKey: false, docsUrl: "https://learn.microsoft.com/en-us/azure/ai-services/openai/" },
+  ollama:    { name: "Ollama",          short: "Local",               tint: "#A1A1AA", monogram: "Ol", defaultUrl: "http://localhost:11434/v1",                         keyPlaceholder: "",      noKey: true,  docsUrl: "https://ollama.com" },
+  lmstudio:  { name: "LM Studio",       short: "Local",               tint: "#22C55E", monogram: "LM", defaultUrl: "http://localhost:1234/v1",                          keyPlaceholder: "",      noKey: true,  docsUrl: "https://lmstudio.ai" },
+};
+const BYOK_ORDER = ["mimo", "anthropic", "openai", "google", "deepseek", "zhipu", "qwen", "moonshot", "mistral", "groq", "azure", "ollama", "lmstudio"];
+
+const DEMO_BYOK: ByokStoreData = {
+  providers: {
+    mimo: { apiKey: "sk-demo", baseUrl: "https://api.xiaomimimo.com/v1", models: ["mimo-v2.6-pro", "mimo-v2.6-flash"], enabled: true, syncedModels: ["mimo-v2.6-pro", "mimo-v2.6-flash"], manualModels: [] },
+    zhipu: { apiKey: "xxxx.demo", baseUrl: "https://open.bigmodel.cn/api/paas/v4", models: ["glm-4-plus", "glm-4-flash"], enabled: false, syncedModels: [], manualModels: ["glm-4-plus"] },
+  },
+  defaultModel: "mimo-v2.6-pro",
+  routingPriority: "fallback",
+};
+
+function ModelKeysSection() {
+  const [store, setStore] = useState<ByokStoreData>(DEMO_BYOK);
+  const [live, setLive] = useState(false);
+  const [selected, setSelected] = useState("mimo");
+  const [keyDraft, setKeyDraft] = useState("");
+  const [baseDraft, setBaseDraft] = useState("");
+  const [modelDraft, setModelDraft] = useState("");
+  const [revealedKey, setRevealedKey] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ tone: "ok" | "err" | "info"; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    sfFetch<Partial<ByokStoreData>>("/api/settings/byok")
+      .then((data) => {
+        setStore({
+          providers: data.providers ?? {},
+          defaultModel: data.defaultModel ?? null,
+          routingPriority: data.routingPriority ?? "fallback",
+        });
+        setLive(true);
+      })
+      .catch(() => setLive(false));
+  }, []);
+
+  const provider = store.providers[selected] ?? null;
+  const meta = BYOK_META[selected];
+  const defaultModelOptions = useMemo(() => {
+    const out: Array<{ provider: string; id: string }> = [];
+    for (const pid of BYOK_ORDER) {
+      const p = store.providers[pid];
+      if (!p?.enabled) continue;
+      for (const m of p.models) out.push({ provider: pid, id: m });
+    }
+    return out;
+  }, [store.providers]);
+
+  const BLANK_PROVIDER: ByokProviderData = { apiKey: "", baseUrl: "", models: [], enabled: false };
+
+  function updateSelected(patch: Partial<ByokProviderData>) {
+    setStore((prev) => ({
+      ...prev,
+      providers: {
+        ...prev.providers,
+        [selected]: { ...BLANK_PROVIDER, ...(prev.providers[selected] ?? {}), ...patch },
+      },
+    }));
+  }
+
+  async function saveProvider(override?: Partial<ByokProviderData>) {
+    const cur: ByokProviderData = { ...BLANK_PROVIDER, ...(provider ?? {}), ...(override ?? {}) };
+    const body: Record<string, unknown> = {
+      baseUrl: baseDraft.trim() || cur.baseUrl || meta.defaultUrl,
+      models: cur.models,
+      enabled: cur.enabled,
+      syncedModels: cur.syncedModels ?? [],
+      manualModels: cur.manualModels ?? [],
+      routingPriority: store.routingPriority,
+    };
+    if (keyDraft.trim()) body.apiKey = keyDraft.trim();
+    if (store.defaultModel) body.defaultModel = store.defaultModel;
+    setBusy(true);
+    try {
+      await sfFetch(`/api/settings/byok/${selected}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      setKeyDraft("");
+      setNotice({ tone: "ok", text: `已保存 ${meta.name} 配置` });
+    } catch {
+      setNotice({ tone: "err", text: live ? "保存失败，请检查后端连接" : "后端未连接，改动仅保留在演示态" });
+    }
+    setBusy(false);
+  }
+
+  async function pullRemote() {
+    setBusy(true);
+    try {
+      const j = await sfFetch<{ models?: Array<string | { id?: string }> }>(`/api/settings/byok/${selected}/models/remote`);
+      const ids = (j.models ?? []).map((m) => (typeof m === "string" ? m : (m.id ?? ""))).filter(Boolean);
+      const merged = Array.from(new Set([...(provider?.models ?? []), ...ids]));
+      const synced = Array.from(new Set([...(provider?.syncedModels ?? []), ...ids]));
+      updateSelected({ models: merged, syncedModels: synced });
+      setNotice({ tone: "ok", text: `已拉取 ${ids.length} 个远端模型，点击「保存配置」入库` });
+    } catch {
+      setNotice({ tone: "err", text: "远端拉取失败：请先填写密钥与 Base URL 并保存" });
+    }
+    setBusy(false);
+  }
+
+  async function checkConn() {
+    setBusy(true);
+    try {
+      const j = await sfFetch<{ overall?: string }>(`/api/settings/byok/${selected}/check`, { method: "POST" });
+      setNotice({ tone: j.overall === "ok" ? "ok" : "err", text: j.overall === "ok" ? "连接正常，密钥有效" : `连接检查结果：${j.overall ?? "失败"}` });
+    } catch {
+      setNotice({ tone: "err", text: "连接检查失败（先保存密钥与 Base URL）" });
+    }
+    setBusy(false);
+  }
+
+  async function revealKey() {
+    if (revealedKey !== null) {
+      setRevealedKey(null);
+      return;
+    }
+    try {
+      const j = await sfFetch<{ apiKey?: string }>(`/api/settings/byok/${selected}/reveal`);
+      setRevealedKey(j.apiKey ?? "");
+    } catch {
+      setNotice({ tone: "err", text: "无法读取密钥（该提供商尚未配置）" });
+    }
+  }
+
+  async function removeProvider() {
+    setBusy(true);
+    try {
+      await sfFetch(`/api/settings/byok/${selected}`, { method: "DELETE" });
+      setStore((prev) => {
+        const next = { ...prev.providers };
+        delete next[selected];
+        return { ...prev, providers: next };
+      });
+      setNotice({ tone: "ok", text: `已删除 ${meta.name} 配置` });
+    } catch {
+      setNotice({ tone: "err", text: live ? "删除失败" : "后端未连接，无法删除" });
+    }
+    setBusy(false);
+  }
+
+  function addModel() {
+    const id = modelDraft.trim();
+    if (!id) return;
+    const models = provider?.models ?? [];
+    if (models.includes(id)) {
+      setNotice({ tone: "info", text: "该模型已在列表中" });
+      return;
+    }
+    updateSelected({ models: [...models, id], manualModels: Array.from(new Set([...(provider?.manualModels ?? []), id])) });
+    setModelDraft("");
+    setNotice({ tone: "info", text: `已添加自定义模型 ${id}，点击「保存配置」入库` });
+  }
+
+  function removeModel(id: string) {
+    updateSelected({
+      models: (provider?.models ?? []).filter((m) => m !== id),
+      manualModels: (provider?.manualModels ?? []).filter((m) => m !== id),
+      syncedModels: (provider?.syncedModels ?? []).filter((m) => m !== id),
+    });
+  }
+
+  async function persistDefaults(patch: Partial<ByokStoreData>) {
+    const next = { ...store, ...patch };
+    setStore(next);
+    try {
+      await sfFetch(`/api/settings/byok/${selected}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          defaultModel: next.defaultModel ?? undefined,
+          routingPriority: next.routingPriority,
+        }),
+      });
+    } catch {
+      /* 演示态忽略 */
+    }
+  }
+
+  return (
+    <div className="sf-byok">
+      <div className="sf-byok-top">
+        <div className="sf-setting-block">
+          <div>
+            <span>
+              <Server />
+            </span>
+            <div>
+              <strong>默认模型</strong>
+              <small>新对话与 Agent 的默认推理模型</small>
+            </div>
+          </div>
+          <select
+            className="sf-select"
+            value={store.defaultModel ?? ""}
+            onChange={(e) => persistDefaults({ defaultModel: e.target.value || null })}
+          >
+            <option value="">未设置</option>
+            {defaultModelOptions.map((o) => (
+              <option key={`${o.provider}:${o.id}`} value={o.id}>
+                {BYOK_META[o.provider]?.name ?? o.provider} · {o.id}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="sf-setting-block">
+          <div>
+            <span>
+              <Link2 />
+            </span>
+            <div>
+              <strong>模型回退链</strong>
+              <small>主模型不可用时自动切换</small>
+            </div>
+          </div>
+          <button
+            type="button"
+            className={`sf-switch ${store.routingPriority === "fallback" ? "on" : ""}`}
+            onClick={() => persistDefaults({ routingPriority: store.routingPriority === "fallback" ? "off" : "fallback" })}
+            aria-label="切换模型回退链"
+          >
+            <i />
+          </button>
+        </div>
+      </div>
+      {!live && <p className="sf-live-tag">演示数据 · 后端未连接</p>}
+      <div className="sf-byok-layout">
+        <aside className="sf-byok-rail">
+          {BYOK_ORDER.map((pid) => {
+            const p = store.providers[pid];
+            const m = BYOK_META[pid];
+            return (
+              <button
+                key={pid}
+                type="button"
+                className={selected === pid ? "active" : ""}
+                onClick={() => {
+                  setSelected(pid);
+                  setKeyDraft("");
+                  setBaseDraft("");
+                  setModelDraft("");
+                  setRevealedKey(null);
+                  setNotice(null);
+                }}
+              >
+                <i style={{ background: m.tint }}>{m.monogram}</i>
+                <div>
+                  <strong>{m.name}</strong>
+                  <small>{p?.apiKey ? (p.enabled ? "已启用" : "已配置") : m.short}</small>
+                </div>
+                {p?.enabled ? <b /> : null}
+              </button>
+            );
+          })}
+        </aside>
+        <div className="sf-byok-detail">
+          <header>
+            <div>
+              <h2>{meta.name}</h2>
+              <span>{meta.short} · {meta.defaultUrl}</span>
+            </div>
+            <button
+              type="button"
+              className={`sf-switch ${provider?.enabled ? "on" : ""}`}
+              onClick={() => {
+                const next = !provider?.enabled;
+                updateSelected({ enabled: next });
+                saveProvider({ enabled: next });
+              }}
+              aria-label="启用该提供商"
+            >
+              <i />
+            </button>
+          </header>
+          <label className="sf-byok-field">
+            <span>API 密钥</span>
+            <div>
+              <input
+                type="password"
+                value={keyDraft}
+                onChange={(e) => setKeyDraft(e.target.value)}
+                placeholder={provider?.apiKey ? provider.apiKey : meta.keyPlaceholder}
+                autoComplete="off"
+              />
+              <button type="button" onClick={revealKey}>
+                {revealedKey !== null ? "隐藏" : "显示"}
+              </button>
+            </div>
+            {revealedKey !== null && <code className="sf-byok-reveal">{revealedKey || "(空)"}</code>}
+            <small>
+              密钥仅保存在你的工作空间中 · <a href={meta.docsUrl} target="_blank" rel="noreferrer">点击这里获取密钥</a>
+            </small>
+          </label>
+          <label className="sf-byok-field">
+            <span>Base URL</span>
+            <div>
+              <input
+                value={baseDraft || provider?.baseUrl || ""}
+                onChange={(e) => setBaseDraft(e.target.value)}
+                placeholder={meta.defaultUrl}
+                disabled={meta.noKey && !provider?.baseUrl ? false : undefined}
+              />
+            </div>
+            <small>OpenAI 兼容接口地址，留空使用官方默认端点</small>
+          </label>
+          <div className="sf-byok-field">
+            <span>
+              模型列表 <em>支持自定义模型</em>
+            </span>
+            <div className="sf-byok-models">
+              {(provider?.models ?? []).map((mid) => (
+                <button key={mid} type="button" className="sf-model-chip" onClick={() => removeModel(mid)} title="点击移除">
+                  {mid} <X size={11} />
+                </button>
+              ))}
+              {(provider?.models ?? []).length === 0 && (
+                <em className="sf-byok-empty">暂无模型：可在下方手动添加自定义模型，或从远端拉取</em>
+              )}
+            </div>
+            <div className="sf-byok-add">
+              <input
+                value={modelDraft}
+                onChange={(e) => setModelDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addModel();
+                  }
+                }}
+                placeholder="输入模型 ID，如 mimo-v2.6-pro 或任意自定义模型"
+              />
+              <button type="button" onClick={addModel}>
+                添加模型
+              </button>
+              <button type="button" onClick={pullRemote} disabled={busy}>
+                拉取远端模型
+              </button>
+            </div>
+          </div>
+          <div className="sf-byok-actions">
+            <button type="button" className="sf-primary" onClick={() => saveProvider()} disabled={busy}>
+              保存配置
+            </button>
+            <button type="button" onClick={checkConn} disabled={busy}>
+              测试连接
+            </button>
+            <button type="button" onClick={revealKey} disabled={busy}>
+              {revealedKey !== null ? "隐藏密钥" : "显示密钥"}
+            </button>
+            <button type="button" className="sf-danger" onClick={removeProvider} disabled={busy}>
+              删除配置
+            </button>
+          </div>
+          {notice && <p className={`sf-byok-notice ${notice.tone}`}>{notice.text}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkillsSettingsList() {
+  type Row = { skill_id: string; name: string; description?: string; enabled?: boolean; source?: string };
+  const [items, setItems] = useState<Row[] | null>(null);
+  const [live, setLive] = useState(true);
+  useEffect(() => {
+    sfFetch<Row[]>("/api/skills")
+      .then((list) => setItems(Array.isArray(list) ? list : []))
+      .catch(() => {
+        setLive(false);
+        setItems([]);
+      });
+  }, []);
+  return (
+    <div className="sf-settings-list">
+      {!live && <p className="sf-live-tag">后端未连接 · 无法加载技能列表</p>}
+      {(items ?? []).map((row) => (
+        <article key={row.skill_id}>
+          <strong>{row.name || row.skill_id}</strong>
+          <p>{row.description ?? row.skill_id}</p>
+          <span>
+            {row.source ?? "builtin"}
+            {row.enabled === false ? " · 已停用" : " · 已启用"}
+          </span>
+        </article>
+      ))}
+      {items !== null && items.length === 0 && <em className="sf-byok-empty">暂无技能数据</em>}
+    </div>
+  );
+}
+
+function CliProvidersSection() {
+  type Row = { id: string; name?: string; version?: string | null; installed?: boolean };
+  const [items, setItems] = useState<Row[] | null>(null);
+  const [live, setLive] = useState(true);
+  useEffect(() => {
+    sfFetch<{ agents?: Row[] }>("/api/settings/agents/detect")
+      .then((j) => setItems((j.agents ?? []).filter((a) => a.installed !== false)))
+      .catch(() => {
+        setLive(false);
+        setItems([]);
+      });
+  }, []);
+  return (
+    <div className="sf-settings-list">
+      {!live && <p className="sf-live-tag">后端未连接 · 无法探测本地执行器</p>}
+      {(items ?? []).map((row) => (
+        <article key={row.id}>
+          <strong>{row.name || row.id}</strong>
+          <p>本地 CLI 执行器 · {row.version || "版本未知"}</p>
+          <span>{row.installed ? "已安装" : "未安装"}</span>
+        </article>
+      ))}
+      {items !== null && items.length === 0 && <em className="sf-byok-empty">未检测到本地 CLI 执行器</em>}
+    </div>
+  );
+}
+
+function ConnectorsSection({ mcp }: { mcp?: boolean }) {
+  type Row = {
+    id: string;
+    name: string;
+    kind?: string;
+    transport?: string;
+    status?: string;
+    policy?: { enabled?: boolean; approval_mode?: string };
+  };
+  const [items, setItems] = useState<Row[] | null>(null);
+  const [live, setLive] = useState(true);
+  useEffect(() => {
+    sfFetch<{ items?: Row[] }>("/api/connectors")
+      .then((j) => {
+        const list = j.items ?? [];
+        setItems(mcp ? list.filter((c) => c.transport === "stdio" || c.transport === "http") : list);
+      })
+      .catch(() => {
+        setLive(false);
+        setItems([]);
+      });
+  }, [mcp]);
+  return (
+    <div className="sf-settings-list">
+      {!live && <p className="sf-live-tag">后端未连接 · 无法加载连接器</p>}
+      {(items ?? []).map((row) => (
+        <article key={row.id}>
+          <strong>{row.name || row.id}</strong>
+          <p>
+            {row.kind ?? "connector"} · {row.transport ?? "stdio"} · {row.status ?? "未知状态"}
+          </p>
+          <span>
+            {row.policy?.enabled === false ? "已禁用" : "已启用"} · 审批 {row.policy?.approval_mode ?? "auto"}
+          </span>
+        </article>
+      ))}
+      {items !== null && items.length === 0 && <em className="sf-byok-empty">暂无{mcp ? " MCP " : " "}连接器</em>}
+    </div>
+  );
+}
+
+function MemoryEntriesSection() {
+  type Row = { id: string; scope?: string; title?: string; content?: string; created_at?: string };
+  const [items, setItems] = useState<Row[] | null>(null);
+  const [live, setLive] = useState(true);
+  const [enabled, setEnabled] = useState(true);
+  useEffect(() => {
+    sfFetch<Row[]>("/api/memory-entries")
+      .then((list) => setItems(Array.isArray(list) ? list : []))
+      .catch(() => {
+        setLive(false);
+        setItems([]);
+      });
+    sfFetch<{ enabled?: boolean }>("/api/memory-entries/settings")
+      .then((j) => setEnabled(j.enabled !== false))
+      .catch(() => undefined);
+  }, []);
+  function toggleMemory() {
+    const next = !enabled;
+    setEnabled(next);
+    sfFetch("/api/memory-entries/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled: next }),
+    }).catch(() => undefined);
+  }
+  return (
+    <div className="sf-settings-list">
+      <div className="sf-setting-block">
+        <div>
+          <span>
+            <Bot />
+          </span>
+          <div>
+            <strong>记忆写回</strong>
+            <small>允许 Agent 把经验沉淀为记忆条目</small>
+          </div>
+        </div>
+        <button type="button" className={`sf-switch ${enabled ? "on" : ""}`} onClick={toggleMemory} aria-label="切换记忆写回">
+          <i />
+        </button>
+      </div>
+      {!live && <p className="sf-live-tag">后端未连接 · 无法加载记忆条目</p>}
+      {(items ?? []).slice(0, 12).map((row) => (
+        <article key={row.id}>
+          <strong>{row.title || row.id.slice(0, 8)}</strong>
+          <p>{(row.content ?? "").slice(0, 90) || "（无内容）"}</p>
+          <span>
+            {row.scope ?? "user"} · {row.created_at ? String(row.created_at).slice(0, 10) : ""}
+          </span>
+        </article>
+      ))}
+      {items !== null && items.length === 0 && <em className="sf-byok-empty">暂无记忆条目</em>}
+    </div>
+  );
+}
+
 function SettingsView() {
   const [section, setSection] = useState("模型与密钥");
-  const groups = [
+  const groups: Array<[string, string[]]> = [
     ["账户", ["个人资料"]],
     ["外观", ["主题与显示", "语言"]],
     ["集成", ["Skills", "模型与密钥", "工具提供商", "连接器", "MCP 集成"]],
@@ -2580,9 +3171,9 @@ function SettingsView() {
     <section className="sf-settings">
       <aside>
         {groups.map(([group, items]) => (
-          <div key={group as string}>
-            <p>{group as string}</p>
-            {(items as string[]).map((item) => (
+          <div key={group}>
+            <p>{group}</p>
+            {items.map((item) => (
               <button
                 key={item}
                 className={section === item ? "active" : ""}
@@ -2607,50 +3198,17 @@ function SettingsView() {
         <p>SETTINGS</p>
         <h1>{section}</h1>
         {section === "模型与密钥" ? (
-          <>
-            <div className="sf-setting-block">
-              <div>
-                <span>
-                  <Server />
-                </span>
-                <div>
-                  <strong>默认模型</strong>
-                  <small>新对话与 Agent 的默认推理模型</small>
-                </div>
-              </div>
-              <button>
-                Claude 3.7 Sonnet <ChevronDown size={14} />
-              </button>
-            </div>
-            <div className="sf-setting-block">
-              <div>
-                <span>
-                  <WalletCards />
-                </span>
-                <div>
-                  <strong>API 密钥</strong>
-                  <small>密钥仅保存在你的工作空间中</small>
-                </div>
-              </div>
-              <button>
-                管理密钥 <ChevronRight size={14} />
-              </button>
-            </div>
-            <div className="sf-setting-block">
-              <div>
-                <span>
-                  <Link2 />
-                </span>
-                <div>
-                  <strong>模型回退链</strong>
-                  <small>主模型不可用时自动切换</small>
-                </div>
-              </div>
-              <label className="sf-switch on">
-                <i />
-              </label>
-            </div>
-          </>
+          <ModelKeysSection />
+        ) : section === "Skills" ? (
+          <SkillsSettingsList />
+        ) : section === "工具提供商" ? (
+          <CliProvidersSection />
+        ) : section === "连接器" ? (
+          <ConnectorsSection />
+        ) : section === "MCP 集成" ? (
+          <ConnectorsSection mcp />
+        ) : section === "记忆条目" ? (
+          <MemoryEntriesSection />
         ) : (
           <div className="sf-settings-placeholder">
             <Settings size={25} />
