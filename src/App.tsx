@@ -1,138 +1,180 @@
 import { FormEvent, useEffect, useState } from "react";
-import ProductApp from "./ProductApp";
+import ProductApp from "../ProductApp";
 import {
-  Activity,
   ArrowRight,
   BarChart3,
-  BookOpen,
-  Bot,
+  BrainCircuit,
+  BriefcaseBusiness,
   Check,
   ChevronDown,
-  ChevronRight,
-  CircleDot,
+  CircleDollarSign,
   Clock3,
-  Code2,
+  Database,
   FileCheck2,
-  FileText,
-  GitBranch,
-  LayoutDashboard,
+  Layers3,
   Menu,
-  MessageSquare,
-  MoreHorizontal,
+  MessageSquareText,
+  MousePointer2,
+  Network,
   Play,
-  Plus,
-  Search,
-  Send,
-  Settings2,
+  Quote,
   ShieldCheck,
   Sparkles,
-  Terminal,
-  Users,
+  Target,
+  UsersRound,
   X,
   Zap,
 } from "lucide-react";
 
-const workflowSteps = [
+const steps = [
   {
-    label: "理解任务",
-    title: "把一句需求，变成可执行的项目",
-    description:
-      "AI 总经理先理解目标、约束与交付标准，再拆解任务依赖，不再让多个 AI 各自猜测上下文。",
-    output: "结构化 Brief · 任务 DAG · 验收标准",
-    icon: Sparkles,
-    color: "#6c5ce7",
+    id: "01",
+    title: "录入客户需求",
+    label: "BRIEF",
+    description: "把目标、预算、品牌信息和交付要求结构化，告别散落在聊天记录里的需求。",
+    result: "结构化客户 Brief",
+    icon: MessageSquareText,
   },
   {
-    label: "团队执行",
-    title: "让专职 Agent 接力协作",
-    description:
-      "研究、策略、内容与设计 Agent 共享同一项目记忆，上游成果会自动成为下游任务的可靠输入。",
-    output: "研究洞察 · 策略方案 · 内容资产",
-    icon: Users,
-    color: "#2474ff",
+    id: "02",
+    title: "AI 总经理拆解",
+    label: "PLAN",
+    description: "识别项目范围，生成执行计划、任务清单和质量标准，并自动分配给合适的 AI 员工。",
+    result: "项目计划与任务 DAG",
+    icon: BrainCircuit,
   },
   {
-    label: "策略审核",
-    title: "关键动作，始终由你决定",
-    description:
-      "预算、品牌主张与最终交付进入人工审批。驳回后自动回到正确节点修订，并保留完整依据。",
-    output: "审批记录 · 修改建议 · 安全策略",
-    icon: ShieldCheck,
-    color: "#e9823d",
+    id: "03",
+    title: "AI 团队协同执行",
+    label: "CREATE",
+    description: "市场、策略、内容和设计员工共享客户上下文，按上游成果连续协作。",
+    result: "策略、内容与视觉成果",
+    icon: Network,
   },
   {
-    label: "完成交付",
-    title: "从执行过程直接生成交付物",
-    description: "统一管理版本、依据与客户反馈，将每次成功交付沉淀为下一次可以复用的工作流和知识。",
-    output: "交付包 · 版本历史 · 可复用模板",
+    id: "04",
+    title: "审核并完成交付",
+    label: "DELIVER",
+    description: "在关键节点人工确认，集中查看版本、修改记录和交付状态，一键导出客户成果。",
+    result: "可审核、可修改、可交付",
     icon: FileCheck2,
-    color: "#18a77d",
   },
 ];
 
 const agents = [
-  { name: "AI 总经理", task: "项目拆解与调度", short: "GM", color: "#6c5ce7", status: "正在规划" },
-  { name: "市场研究员", task: "竞品与趋势研究", short: "MR", color: "#2474ff", status: "已完成" },
-  { name: "品牌策略师", task: "定位与传播策略", short: "BS", color: "#e9823d", status: "等待输入" },
-  { name: "内容创意", task: "主题、文案与脚本", short: "CC", color: "#d84f82", status: "准备就绪" },
+  {
+    role: "AI 总经理",
+    en: "CHIEF OF STAFF",
+    task: "理解需求 · 规划任务 · 调度团队",
+    color: "#ff5e3a",
+    icon: BriefcaseBusiness,
+  },
+  {
+    role: "市场研究员",
+    en: "RESEARCHER",
+    task: "市场扫描 · 竞品分析 · 洞察提炼",
+    color: "#00b9a7",
+    icon: BarChart3,
+  },
+  {
+    role: "品牌策略师",
+    en: "STRATEGIST",
+    task: "品牌定位 · 营销策略 · Campaign 规划",
+    color: "#8e6cff",
+    icon: Target,
+  },
+  {
+    role: "内容创意",
+    en: "CREATIVE",
+    task: "内容主题 · 文案脚本 · 社媒排期",
+    color: "#ec3a69",
+    icon: Sparkles,
+  },
+];
+
+const plans = [
+  {
+    name: "体验版",
+    en: "STARTER",
+    description: "适合准备尝试 AI 团队的独立创作者",
+    price: "免费",
+    suffix: "",
+    features: ["3 位预设 AI 员工", "1 个活跃客户项目", "基础营销模板", "每月有限执行额度"],
+  },
+  {
+    name: "工作室版",
+    en: "STUDIO",
+    description: "适合有稳定客户的一人营销工作室",
+    price: "¥399",
+    suffix: "/ 月",
+    features: [
+      "完整 AI 营销团队",
+      "多客户项目管理",
+      "客户品牌知识库",
+      "DAG 多 Agent 协作",
+      "成果版本与交付中心",
+    ],
+    featured: true,
+  },
+  {
+    name: "专业定制版",
+    en: "PRO CUSTOM",
+    description: "适合拥有独特流程与方法论的专业工作室",
+    price: "定制",
+    suffix: "",
+    features: [
+      "工作室版全部功能",
+      "专属 Skill 与员工",
+      "历史知识库迁移",
+      "定制工作流与部署",
+      "团队培训与持续优化",
+    ],
+  },
 ];
 
 const faqs = [
   {
-    q: "ShadowFlow 与普通 AI 对话工具有什么不同？",
-    a: "普通对话工具解决一次生成，ShadowFlow 管理完整业务过程：角色、任务依赖、审核策略、版本与交付都在同一个可追踪工作流里。",
+    q: "ShadowFlow 和通用大模型有什么不同？",
+    a: "通用大模型擅长单次对话与生成；ShadowFlow 把模型能力组织成有岗位、有上下游、有质量标准的业务流程，并将执行过程与客户、项目、成本和交付成果关联起来。",
   },
   {
-    q: "可以接入现有模型和工具吗？",
-    a: "可以。工作流可以按任务连接不同模型、内部知识与常用工具，保留你现有的最佳实践，而不是强迫团队迁移到单一模型。",
+    q: "我已经在用很多 AI 工具，还需要 ShadowFlow 吗？",
+    a: "ShadowFlow 不替代你喜爱的工具，而是统一承接需求、拆解任务、传递上下文和管理交付，减少在不同工具间复制资料、检查版本的时间。",
   },
   {
-    q: "AI 的输出会未经确认直接发送吗？",
-    a: "不会。你可以为高风险节点设置强制人工审核、驳回与回滚规则，只有通过策略检查的内容才会进入下一阶段。",
+    q: "AI 会直接把未经审核的内容发给客户吗？",
+    a: "不会。关键交付节点默认需要人工确认。你可以查看依据、修改内容、退回任务，并在确认后再导出或分享给客户。",
+  },
+  {
+    q: "能否沉淀我自己的营销方法论？",
+    a: "可以。专业定制版支持将你的 SOP、模板、案例和交付标准转化为专属 Skill、知识库和工作流，让个人经验成为可复用的公司资产。",
   },
 ];
 
-export default function App() {
-  const [productMode, setProductMode] = useState(
-    window.location.pathname.startsWith("/app") || window.location.hash === "#/app",
-  );
+function LandingApp() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [activeStep, setActiveStep] = useState(1);
+  const [modal, setModal] = useState<"demo" | "plan" | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState("工作室版");
   const [submitted, setSubmitted] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
 
   useEffect(() => {
-    const sync = () =>
-      setProductMode(
-        window.location.pathname.startsWith("/app") || window.location.hash === "#/app",
-      );
-    window.addEventListener("hashchange", sync);
-    window.addEventListener("popstate", sync);
-    return () => {
-      window.removeEventListener("hashchange", sync);
-      window.removeEventListener("popstate", sync);
-    };
-  }, []);
-
-  useEffect(() => {
-    document.body.style.overflow = modalOpen ? "hidden" : "";
+    document.body.style.overflow = modal ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [modalOpen]);
-
-  if (productMode) return <ProductApp />;
+  }, [modal]);
 
   function scrollTo(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setMenuOpen(false);
   }
 
-  function openDemo() {
+  function openPlan(plan: string) {
+    setSelectedPlan(plan);
     setSubmitted(false);
-    setModalOpen(true);
-    setMenuOpen(false);
+    setModal("plan");
   }
 
   function submitForm(event: FormEvent<HTMLFormElement>) {
@@ -141,266 +183,437 @@ export default function App() {
   }
 
   return (
-    <main className="site-shell">
-      <nav className="topbar">
-        <div className="nav-wrap">
+    <main className="min-h-screen overflow-hidden bg-[#f7f4ed] text-[#17162d]">
+      <nav className="top-nav">
+        <div className="nav-inner">
           <button className="brand" onClick={() => scrollTo("home")} aria-label="ShadowFlow 首页">
             <Logo />
             <span>ShadowFlow</span>
           </button>
           <div className="nav-links">
-            <button onClick={() => scrollTo("product")}>产品</button>
-            <button onClick={() => scrollTo("workflow")}>工作流</button>
+            <button onClick={() => scrollTo("workflow")}>如何工作</button>
             <button onClick={() => scrollTo("agents")}>AI 团队</button>
-            <button onClick={() => scrollTo("security")}>安全与审核</button>
+            <button onClick={() => scrollTo("solutions")}>产品价值</button>
+            <button onClick={() => scrollTo("pricing")}>价格</button>
           </div>
           <div className="nav-actions">
-            <a href="https://github.com/Ravenveil/ShadowFlow" target="_blank" rel="noreferrer">
-              GitHub
-            </a>
-            <button className="primary-btn compact" onClick={openDemo}>
-              申请体验 <ArrowRight size={15} />
+            <button className="nav-login" onClick={() => { window.location.hash = "#/app"; }}>
+              进入产品
+            </button>
+            <button className="nav-login" onClick={() => setModal("demo")}>
+              申请内测
+            </button>
+            <button className="nav-cta" onClick={() => setModal("demo")}>
+              预约演示 <ArrowRight size={15} />
             </button>
           </div>
           <button
-            className="mobile-trigger"
+            className="mobile-menu"
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="切换菜单"
+            aria-label="打开菜单"
           >
             {menuOpen ? <X /> : <Menu />}
           </button>
         </div>
         {menuOpen && (
-          <div className="mobile-menu">
+          <div className="mobile-panel">
             {[
-              ["产品", "product"],
-              ["工作流", "workflow"],
+              ["如何工作", "workflow"],
               ["AI 团队", "agents"],
-              ["安全与审核", "security"],
+              ["产品价值", "solutions"],
+              ["价格", "pricing"],
             ].map(([label, id]) => (
               <button key={id} onClick={() => scrollTo(id)}>
                 {label}
               </button>
             ))}
-            <button className="primary-btn" onClick={openDemo}>
-              申请体验 <ArrowRight size={16} />
+            <button className="nav-cta" onClick={() => setModal("demo")}>
+              预约产品演示 <ArrowRight size={15} />
             </button>
           </div>
         )}
       </nav>
 
       <header id="home" className="hero">
-        <div className="hero-glow" />
-        <div className="content-wrap hero-copy">
-          <div className="eyebrow">
-            <span>NEW</span>
-            Contract-first 多 Agent 协作平台
-            <ChevronRight size={13} />
+        <div className="hero-orbit orbit-one" />
+        <div className="hero-orbit orbit-two" />
+        <div className="page-shell hero-grid">
+          <div className="hero-copy">
+            <div className="launch-tag">
+              <span /> 为一人营销工作室打造
+            </div>
+            <h1>
+              一个人，
+              <br />
+              也能经营一家
+              <br />
+              <em>AI 营销公司。</em>
+            </h1>
+            <p>
+              从客户需求到专业成果交付，让 AI 员工按你的方法协同工作。 你负责判断与决策，ShadowFlow
+              负责让业务持续向前。
+            </p>
+            <div className="hero-actions">
+              <button className="button-primary" onClick={() => setModal("demo")}>
+                预约产品演示 <ArrowRight size={18} />
+              </button>
+              <button className="button-ghost" onClick={() => scrollTo("workflow")}>
+                <span>
+                  <Play size={15} fill="currentColor" />
+                </span>{" "}
+                看看如何工作
+              </button>
+            </div>
+            <div className="trust-row">
+              <span>
+                <Check size={14} /> 无需信用卡
+              </span>
+              <span>
+                <Check size={14} /> 15 分钟完成配置
+              </span>
+              <span>
+                <Check size={14} /> 关键节点人工可控
+              </span>
+            </div>
           </div>
-          <h1>
-            让一群 AI，
-            <br />
-            像一个真正的<span>团队</span>。
-          </h1>
-          <p>
-            从任务拆解、Agent 协作到人工审核与成果交付。
-            <br />
-            用一条可见、可控、可复用的工作流，经营你的 AI 公司。
-          </p>
-          <div className="hero-actions">
-            <button className="primary-btn large" onClick={openDemo}>
-              免费申请体验 <ArrowRight size={17} />
-            </button>
-            <button className="secondary-btn large" onClick={() => scrollTo("product")}>
-              <Play size={15} fill="currentColor" /> 查看产品
-            </button>
-          </div>
-          <div className="hero-notes">
-            <span>
-              <Check size={13} /> 15 分钟完成配置
-            </span>
-            <span>
-              <Check size={13} /> 支持人工审核与回滚
-            </span>
-            <span>
-              <Check size={13} /> 灵活接入主流模型
-            </span>
-          </div>
+          <ProductVisual />
         </div>
-        <div id="product" className="content-wrap product-stage">
-          <Workbench />
-          <div className="stage-shadow" />
+        <div className="page-shell proof-strip">
+          <p>把散落的 AI 能力，组织成可交付的业务系统</p>
+          <div>
+            <span>
+              <Clock3 /> 交付周期更短
+            </span>
+            <span>
+              <UsersRound /> 接单能力提升
+            </span>
+            <span>
+              <Database /> 客户知识沉淀
+            </span>
+            <span>
+              <CircleDollarSign /> 成本清晰可见
+            </span>
+          </div>
         </div>
       </header>
 
-      <section className="trust-bar">
-        <div className="content-wrap">
-          <p>为复杂业务而生的 AI 协作基础设施</p>
-          <div>
-            <span>
-              <GitBranch /> 可视化工作流
-            </span>
-            <span>
-              <ShieldCheck /> 策略与审批
-            </span>
-            <Terminal /> <span>任意模型接入</span>
-            <span>
-              <Activity /> 全链路追踪
-            </span>
+      <section id="solutions" className="section problem-section">
+        <div className="page-shell">
+          <div className="section-intro">
+            <div>
+              <p className="kicker">ONE PERSON, TOO MANY ROLES</p>
+              <h2>
+                你缺的不是另一个工具，
+                <br />
+                而是一支真正协作的团队。
+              </h2>
+            </div>
+            <p>
+              当你同时是销售、策略、文案、设计和项目经理，真正消耗精力的不是某一项工作，而是不断切换角色与拼接信息。
+            </p>
+          </div>
+          <div className="problem-grid">
+            <article className="problem-feature">
+              <span className="feature-index">01 / 04</span>
+              <div className="fragment-visual">
+                <div>CHAT</div>
+                <div>DOCS</div>
+                <div>DESIGN</div>
+                <div>FILES</div>
+                <Network />
+              </div>
+              <h3>工具很多，流程依然断裂</h3>
+              <p>客户资料、AI 对话、设计文件和项目进度散落各处，每次协作都在重新复制上下文。</p>
+            </article>
+            <div className="problem-list">
+              {[
+                [
+                  "02",
+                  "一个人承担多个岗位",
+                  "市场研究、策划、内容、视觉和客户沟通，都压在创始人一个人身上。",
+                  Layers3,
+                ],
+                [
+                  "03",
+                  "AI 输出难以稳定交付",
+                  "缺少负责人、验收标准、审核节点与修改记录，结果不可控。",
+                  ShieldCheck,
+                ],
+                [
+                  "04",
+                  "项目经验无法变成资产",
+                  "客户偏好和有效方法散落在历史文件里，下次项目又要从头开始。",
+                  Database,
+                ],
+              ].map(([num, title, copy, Icon]) => {
+                const ItemIcon = Icon as typeof Layers3;
+                return (
+                  <article key={num as string}>
+                    <span>{num as string}</span>
+                    <ItemIcon />
+                    <div>
+                      <h3>{title as string}</h3>
+                      <p>{copy as string}</p>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
       <section id="workflow" className="section workflow-section">
-        <div className="content-wrap">
-          <SectionHeading
-            kicker="ONE FLOW, COMPLETE DELIVERY"
-            title="不是更多 AI 工具，\n而是一套完整的交付系统。"
-            copy="把模糊需求转化为可执行流程，让不同 Agent 在清晰的责任边界里协作，你只在真正重要的节点做决定。"
-          />
-          <div className="workflow-grid">
-            <div className="workflow-tabs">
-              {workflowSteps.map((step, index) => {
-                const Icon = step.icon;
-                return (
-                  <button
-                    key={step.label}
-                    className={activeStep === index ? "active" : ""}
-                    onClick={() => setActiveStep(index)}
-                  >
-                    <span className="step-index">0{index + 1}</span>
-                    <span
-                      className="step-icon"
-                      style={{ "--step-color": step.color } as React.CSSProperties}
-                    >
-                      <Icon size={18} />
-                    </span>
-                    <span>
-                      <small>{step.label}</small>
-                      <strong>{step.title}</strong>
-                    </span>
-                    <ChevronRight size={17} />
-                  </button>
-                );
-              })}
+        <div className="page-shell">
+          <div className="section-intro light">
+            <div>
+              <p className="kicker">FROM BRIEF TO DELIVERY</p>
+              <h2>
+                一条完整的营销
+                <br />
+                业务交付链路
+              </h2>
             </div>
-            <WorkflowPreview step={workflowSteps[activeStep]} index={activeStep} />
+            <p>
+              ShadowFlow
+              不是让四个聊天机器人各说各话，而是让每个角色基于同一份客户知识，接力完成同一个业务目标。
+            </p>
+          </div>
+          <div className="workflow-layout">
+            <div className="step-list">
+              {steps.map((step, index) => (
+                <button
+                  key={step.id}
+                  onClick={() => setActiveStep(index)}
+                  className={activeStep === index ? "active" : ""}
+                >
+                  <span>{step.id}</span>
+                  <div>
+                    <small>{step.label}</small>
+                    <strong>{step.title}</strong>
+                  </div>
+                  <ArrowRight />
+                </button>
+              ))}
+            </div>
+            <div className="step-detail">
+              <div className="step-topline">
+                <span>WORKFLOW / {steps[activeStep].id}</span>
+                <span className="live-dot">LIVE</span>
+              </div>
+              <div className="step-icon">
+                {(() => {
+                  const Icon = steps[activeStep].icon;
+                  return <Icon size={40} />;
+                })()}
+              </div>
+              <p className="step-label">{steps[activeStep].label}</p>
+              <h3>{steps[activeStep].title}</h3>
+              <p className="step-description">{steps[activeStep].description}</p>
+              <div className="step-result">
+                <Check size={17} />
+                <div>
+                  <small>本阶段产出</small>
+                  <strong>{steps[activeStep].result}</strong>
+                </div>
+              </div>
+              <div className="flow-line">
+                {steps.map((_, index) => (
+                  <span key={index} className={index <= activeStep ? "done" : ""} />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       <section id="agents" className="section agents-section">
-        <div className="content-wrap">
-          <SectionHeading
-            kicker="YOUR AI TEAM"
-            title="每个 Agent 都有角色，\n也有明确的责任边界。"
-            copy="不是把同一个 Prompt 发给四个机器人，而是让每位 AI 员工拥有自己的技能、工具、上下文和交付标准。"
-            light
-          />
+        <div className="page-shell">
+          <div className="section-intro">
+            <div>
+              <p className="kicker">YOUR AI MARKETING TEAM</p>
+              <h2>
+                不是助手，是有责任边界的
+                <br />
+                AI 员工团队。
+              </h2>
+            </div>
+            <p>
+              每位员工都有明确的职责、输入、工具和交付标准。AI
+              总经理负责规划和调度，你始终保留最终决策权。
+            </p>
+          </div>
           <div className="agent-grid">
-            {agents.map((agent, index) => (
-              <article className="agent-card" key={agent.name}>
-                <div className="agent-top">
-                  <span>A0{index + 1}</span>
-                  <MoreHorizontal size={18} />
-                </div>
-                <div
-                  className="agent-avatar"
+            {agents.map((agent, index) => {
+              const Icon = agent.icon;
+              return (
+                <article
+                  className="agent-card"
+                  key={agent.role}
                   style={{ "--agent-color": agent.color } as React.CSSProperties}
                 >
-                  {agent.short}
-                  <i />
+                  <div className="agent-number">A{index + 1}</div>
+                  <div className="agent-avatar">
+                    <Icon size={31} />
+                  </div>
+                  <p>{agent.en}</p>
+                  <h3>{agent.role}</h3>
+                  <div className="agent-task">{agent.task}</div>
+                  <div className="agent-status">
+                    <span /> READY TO WORK
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <div className="human-loop">
+            <div className="human-badge">
+              <MousePointer2 />
+            </div>
+            <div>
+              <p>HUMAN IN THE LOOP</p>
+              <h3>AI 负责执行，你负责判断。</h3>
+            </div>
+            <p>
+              所有关键策略、预算与最终交付都由你审核确认。你不是被替代，而是从重复劳动中被释放。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section outcomes-section">
+        <div className="page-shell outcomes-grid">
+          <div className="outcome-copy">
+            <p className="kicker">EVERY PROJECT MAKES YOU STRONGER</p>
+            <h2>
+              交付的不只是成果，
+              <br />
+              更是你公司的长期资产。
+            </h2>
+            <p>
+              每次项目的客户反馈、有效策略、内容偏好和交付标准都会回到公司的知识系统。下一次，不再从零开始。
+            </p>
+            <div className="outcome-metrics">
+              <div>
+                <strong>1</strong>
+                <span>个统一客户上下文</span>
+              </div>
+              <div>
+                <strong>∞</strong>
+                <span>次复用方法与经验</span>
+              </div>
+            </div>
+          </div>
+          <div className="knowledge-visual">
+            <div className="knowledge-core">
+              <Database />
+              <span>品牌知识库</span>
+              <small>持续学习中</small>
+            </div>
+            <div className="knowledge-node n1">
+              <MessageSquareText />
+              <span>客户反馈</span>
+            </div>
+            <div className="knowledge-node n2">
+              <FileCheck2 />
+              <span>项目成果</span>
+            </div>
+            <div className="knowledge-node n3">
+              <Layers3 />
+              <span>SOP 模板</span>
+            </div>
+            <div className="knowledge-node n4">
+              <Target />
+              <span>品牌偏好</span>
+            </div>
+            <svg viewBox="0 0 600 480" aria-hidden="true">
+              <path d="M300 240 L130 110 M300 240 L480 100 M300 240 L115 375 M300 240 L485 375" />
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <section className="testimonial-section">
+        <div className="page-shell testimonial">
+          <Quote />
+          <blockquote>
+            “过去我是在不同 AI 工具之间搬运信息。现在更像是在经营一家公司：
+            每个人知道自己该做什么，项目走到哪一步，我随时都看得见。”
+          </blockquote>
+          <div className="testimonial-person">
+            <span>YL</span>
+            <p>
+              <strong>一人品牌营销工作室主理人</strong>
+              <small>ShadowFlow 早期体验用户</small>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="section pricing-section">
+        <div className="page-shell">
+          <div className="pricing-heading">
+            <p className="kicker">START SMALL, BUILD YOUR COMPANY</p>
+            <h2>
+              从一个项目开始，
+              <br />
+              搭建你的 AI 公司。
+            </h2>
+            <p>无需扩张固定团队，也能获得专业营销服务所需的完整执行能力。</p>
+          </div>
+          <div className="pricing-grid">
+            {plans.map((plan) => (
+              <article key={plan.name} className={`price-card ${plan.featured ? "featured" : ""}`}>
+                {plan.featured && <span className="plan-tag">最适合一人工作室</span>}
+                <p className="plan-en">{plan.en}</p>
+                <h3>{plan.name}</h3>
+                <p className="plan-description">{plan.description}</p>
+                <div className="plan-price">
+                  {plan.price}
+                  <span>{plan.suffix}</span>
                 </div>
-                <h3>{agent.name}</h3>
-                <p>{agent.task}</p>
-                <div className="agent-status">
-                  <span className={index === 0 ? "working" : ""} />
-                  {agent.status}
-                </div>
+                <button onClick={() => openPlan(plan.name)}>
+                  {plan.name === "体验版"
+                    ? "免费开始"
+                    : plan.name === "工作室版"
+                      ? "开始 14 天试用"
+                      : "联系方案顾问"}
+                  <ArrowRight size={17} />
+                </button>
+                <ul>
+                  {plan.features.map((feature) => (
+                    <li key={feature}>
+                      <Check size={16} />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
               </article>
             ))}
           </div>
-          <div className="team-console">
-            <div>
-              <span className="console-icon">
-                <Bot size={22} />
-              </span>
-              <div>
-                <small>TEAM ORCHESTRATION</small>
-                <strong>AI 总经理正在调度 3 位团队成员</strong>
-              </div>
-            </div>
-            <div className="console-flow">
-              {agents.map((agent, index) => (
-                <span
-                  key={agent.short}
-                  style={{ "--agent-color": agent.color } as React.CSSProperties}
-                >
-                  {agent.short}
-                  {index < agents.length - 1 && <i />}
-                </span>
-              ))}
-            </div>
-            <button onClick={() => scrollTo("workflow")}>
-              查看工作流 <ArrowRight size={15} />
-            </button>
-          </div>
+          <p className="price-note">所有价格均为产品规划参考，正式方案将在试点验证后公布。</p>
         </div>
       </section>
 
-      <section id="security" className="section governance-section">
-        <div className="content-wrap governance-grid">
-          <div className="governance-copy">
-            <p className="section-kicker">HUMAN IN THE LOOP</p>
-            <h2>
-              AI 负责执行，
-              <br />
-              最终决定权仍在你。
-            </h2>
-            <p>
-              ShadowFlow 在关键业务节点加入可配置的人工审核。
-              你可以批准、驳回或回到任意检查点，而所有依据和修改都会被完整记录。
-            </p>
-            <ul>
-              <li>
-                <Check /> 高风险动作强制人工确认
-              </li>
-              <li>
-                <Check /> 驳回后自动返回正确节点修订
-              </li>
-              <li>
-                <Check /> 全链路版本、成本与依据可追踪
-              </li>
-            </ul>
-            <button className="secondary-btn" onClick={openDemo}>
-              了解安全机制 <ArrowRight size={15} />
-            </button>
-          </div>
-          <ApprovalCard />
-        </div>
-      </section>
-
-      <section className="section faq-section">
-        <div className="content-wrap faq-grid">
+      <section id="faq" className="section faq-section">
+        <div className="page-shell faq-layout">
           <div>
-            <p className="section-kicker">QUESTIONS, ANSWERED</p>
-            <h2>
-              开始之前，
-              <br />
-              你可能想知道。
-            </h2>
-            <p>还有其他问题？</p>
-            <button onClick={openDemo}>
-              和我们聊聊 <ArrowRight size={14} />
-            </button>
+            <p className="kicker">QUESTIONS, ANSWERED</p>
+            <h2>你可能想知道</h2>
+            <p>
+              还有其他问题？
+              <button onClick={() => setModal("demo")}>
+                和我们聊聊 <ArrowRight size={14} />
+              </button>
+            </p>
           </div>
           <div className="faq-list">
             {faqs.map((faq, index) => (
               <article key={faq.q} className={openFaq === index ? "open" : ""}>
                 <button onClick={() => setOpenFaq(openFaq === index ? -1 : index)}>
-                  <span>0{index + 1}</span>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
                   <strong>{faq.q}</strong>
-                  <ChevronDown size={19} />
+                  <ChevronDown />
                 </button>
                 <div>
                   <p>{faq.a}</p>
@@ -412,92 +625,94 @@ export default function App() {
       </section>
 
       <section className="final-cta">
-        <div className="content-wrap">
-          <div className="cta-mark">
-            <Logo />
-          </div>
-          <p>YOUR METHOD. YOUR TEAM. YOUR COMPANY.</p>
+        <div className="cta-grid" />
+        <div className="page-shell">
+          <p>YOUR COMPANY. YOUR METHOD. YOUR AI TEAM.</p>
           <h2>
-            准备好组建你的
+            准备好经营一家
             <br />
-            <span>AI 团队</span>了吗？
+            <em>一个人的 AI 公司</em>了吗？
           </h2>
-          <button className="primary-btn large inverse" onClick={openDemo}>
-            申请产品体验 <ArrowRight size={17} />
+          <button className="button-primary" onClick={() => setModal("demo")}>
+            预约产品演示 <ArrowRight size={18} />
           </button>
         </div>
       </section>
 
       <footer>
-        <div className="content-wrap footer-main">
-          <div>
+        <div className="page-shell footer-main">
+          <div className="footer-brand">
             <div className="brand">
               <Logo />
               <span>ShadowFlow</span>
             </div>
-            <p>让 AI Agent 真正协作起来。</p>
+            <p>让一个人，也能经营一家专业的 AI 营销公司。</p>
           </div>
           <div>
             <strong>产品</strong>
-            <button onClick={() => scrollTo("product")}>产品体验</button>
-            <button onClick={() => scrollTo("workflow")}>工作流</button>
-            <button onClick={() => scrollTo("agents")}>AI 团队</button>
+            <button onClick={() => scrollTo("workflow")}>如何工作</button>
+            <button onClick={() => scrollTo("agents")}>AI 员工</button>
+            <button onClick={() => scrollTo("pricing")}>价格方案</button>
           </div>
           <div>
             <strong>资源</strong>
-            <a href="https://github.com/Ravenveil/ShadowFlow" target="_blank" rel="noreferrer">
-              GitHub
-            </a>
-            <button onClick={() => scrollTo("security")}>安全机制</button>
+            <a href="#faq">帮助中心</a>
+            <a href="#about">关于我们</a>
             <a href="mailto:hello@shadowflow.ai">联系我们</a>
           </div>
-          <div className="footer-join">
-            <strong>获取产品更新</strong>
-            <p>加入内测名单，了解最新进展。</p>
-            <button onClick={openDemo}>
-              申请加入 <ArrowRight size={15} />
-            </button>
+          <div className="footer-news">
+            <strong>获取产品进展</strong>
+            <p>订阅内测与产品更新</p>
+            <form onSubmit={submitForm}>
+              <input type="email" required aria-label="邮箱地址" placeholder="你的邮箱" />
+              <button aria-label="订阅">
+                <ArrowRight />
+              </button>
+            </form>
           </div>
         </div>
-        <div className="content-wrap footer-bottom">
-          <span>© 2026 ShadowFlow</span>
-          <span>Built for agent teams.</span>
+        <div className="page-shell footer-bottom">
+          <span>© 2026 ShadowFlow. All rights reserved.</span>
+          <div>
+            <a href="#privacy">隐私政策</a>
+            <a href="#terms">服务条款</a>
+          </div>
         </div>
       </footer>
 
-      {modalOpen && (
+      {modal && (
         <div
           className="modal-backdrop"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
-          onMouseDown={() => setModalOpen(false)}
+          onMouseDown={() => setModal(null)}
         >
           <div className="contact-modal" onMouseDown={(event) => event.stopPropagation()}>
-            <button className="modal-close" onClick={() => setModalOpen(false)} aria-label="关闭">
-              <X size={19} />
+            <button className="modal-close" onClick={() => setModal(null)} aria-label="关闭">
+              <X />
             </button>
             {submitted ? (
               <div className="success-state">
                 <span>
                   <Check />
                 </span>
-                <small>REQUEST RECEIVED</small>
-                <h2>申请已收到</h2>
-                <p>感谢关注 ShadowFlow，我们会尽快通过邮件与你联系。</p>
-                <button className="primary-btn" onClick={() => setModalOpen(false)}>
+                <p>SUBMITTED</p>
+                <h2>已收到你的申请</h2>
+                <p>感谢关注 ShadowFlow。我们会尽快通过邮件与你联系。</p>
+                <button className="button-primary" onClick={() => setModal(null)}>
                   完成
                 </button>
               </div>
             ) : (
               <>
-                <p className="section-kicker">EARLY ACCESS</p>
+                <p className="kicker">{modal === "demo" ? "BOOK A DEMO" : "GET STARTED"}</p>
                 <h2 id="modal-title">
-                  组建你的第一支
-                  <br />
-                  AI Agent 团队
+                  {modal === "demo"
+                    ? "看看 ShadowFlow 如何帮你交付下一个项目"
+                    : `申请 ${selectedPlan}`}
                 </h2>
-                <p>留下基本信息，我们会与你一起梳理最适合自动化的业务流程。</p>
+                <p>留下你的信息，我们将在 1 个工作日内与你联系。</p>
                 <form onSubmit={submitForm}>
                   <label>
                     你的称呼
@@ -508,11 +723,25 @@ export default function App() {
                     <input required type="email" placeholder="name@company.com" />
                   </label>
                   <label>
-                    目前最想自动化的工作
-                    <textarea rows={3} placeholder="例如：客户研究、内容生产、项目交付…" />
+                    你目前的业务阶段
+                    <select defaultValue="">
+                      <option value="" disabled>
+                        请选择
+                      </option>
+                      <option>准备开始一人工作室</option>
+                      <option>已有 1–5 个稳定客户</option>
+                      <option>已有成熟业务和方法论</option>
+                    </select>
                   </label>
-                  <button className="primary-btn large" type="submit">
-                    提交申请 <ArrowRight size={16} />
+                  <label>
+                    最想解决的问题
+                    <textarea
+                      rows={3}
+                      placeholder="例如：多客户项目管理、内容交付效率、知识沉淀…"
+                    />
+                  </label>
+                  <button className="button-primary" type="submit">
+                    提交申请 <ArrowRight size={17} />
                   </button>
                 </form>
               </>
@@ -534,276 +763,110 @@ function Logo() {
   );
 }
 
-function SectionHeading({
-  kicker,
-  title,
-  copy,
-  light = false,
-}: {
-  kicker: string;
-  title: string;
-  copy: string;
-  light?: boolean;
-}) {
+function ProductVisual() {
   return (
-    <div className={`section-heading ${light ? "light" : ""}`}>
-      <div>
-        <p className="section-kicker">{kicker}</p>
-        <h2>
-          {title.split("\n").map((line, index) => (
-            <span key={line}>
-              {line}
-              {index === 0 && <br />}
-            </span>
-          ))}
-        </h2>
-      </div>
-      <p>{copy}</p>
-    </div>
-  );
-}
-
-function Workbench() {
-  return (
-    <div className="workbench">
-      <aside className="wb-sidebar">
-        <div className="wb-brand">
-          <Logo />
-          <span>ShadowFlow</span>
-        </div>
-        <button className="new-task">
-          <Plus size={14} /> 新建任务
-        </button>
-        <div className="wb-nav">
-          <button className="active">
-            <MessageSquare size={15} /> 对话
-          </button>
-          <button>
-            <LayoutDashboard size={15} /> 工作台
-          </button>
-          <button>
-            <Users size={15} /> Agent 团队
-          </button>
-          <button>
-            <BookOpen size={15} /> 知识库
-          </button>
-        </div>
-        <p>最近项目</p>
-        <button className="project active">
-          <span /> Atlas 品牌发布
-        </button>
-        <button className="project">
-          <span /> Q2 内容策略
-        </button>
-        <button className="project">
-          <span /> 市场竞品研究
-        </button>
-        <div className="wb-user">
-          <span>YL</span>
+    <div className="product-visual" style={{ cursor: "pointer" }} title="点击进入产品" onClick={() => { window.location.hash = "#/app"; }}>
+      <div className="visual-window">
+        <div className="window-bar">
           <div>
-            <strong>Yuki Lin</strong>
-            <small>Studio workspace</small>
+            <span />
+            <span />
+            <span />
           </div>
-          <Settings2 size={14} />
+          <p>项目执行中心</p>
+          <small>shadowflow.ai</small>
         </div>
-      </aside>
-      <div className="wb-main">
-        <div className="wb-header">
-          <div>
-            <strong>Atlas 品牌发布</strong>
-            <span>项目运行中</span>
-          </div>
-          <div>
-            <button>
-              <Search size={14} />
-            </button>
-            <button>
-              <MoreHorizontal size={15} />
-            </button>
-          </div>
-        </div>
-        <div className="wb-content">
-          <div className="conversation">
-            <div className="conversation-date">今天 10:24</div>
-            <div className="user-message">
-              为 Atlas 的新品发布制定一套完整的营销方案，目标是获得 1,000 个早期用户。
-            </div>
-            <div className="agent-message">
-              <div className="mini-avatar purple">GM</div>
+        <div className="window-body">
+          <aside>
+            <Logo />
+            {[BriefcaseBusiness, UsersRound, Layers3, Database].map((Icon, index) => (
+              <span key={index} className={index === 0 ? "active" : ""}>
+                <Icon size={17} />
+              </span>
+            ))}
+          </aside>
+          <div className="project-content">
+            <div className="project-head">
               <div>
-                <p>
-                  <strong>AI 总经理</strong>
-                  <small>刚刚</small>
-                </p>
-                <span>我会先拆解目标、受众和交付标准，再召集研究与内容团队并行执行。</span>
+                <small>ACTIVE PROJECT</small>
+                <h3>Oat Studio 品牌焕新</h3>
+              </div>
+              <span>执行中 · 68%</span>
+            </div>
+            <div className="progress">
+              <i />
+            </div>
+            <div className="project-stats">
+              <div>
+                <span>12</span>
+                <small>任务总数</small>
+              </div>
+              <div>
+                <span>08</span>
+                <small>已完成</small>
+              </div>
+              <div>
+                <span>03</span>
+                <small>AI 执行中</small>
               </div>
             </div>
-            <div className="plan-card">
-              <div>
-                <GitBranch size={15} />
-                <strong>执行计划</strong>
-                <span>4 个阶段</span>
-              </div>
+            <div className="project-flow">
+              <p>
+                工作流 <span>实时同步</span>
+              </p>
               {[
-                ["市场与竞品研究", "市场研究员", "done"],
-                ["品牌定位与传播策略", "品牌策略师", "run"],
-                ["发布内容与渠道规划", "内容创意", ""],
-              ].map(([title, owner, state], index) => (
-                <div className="task-row" key={title}>
-                  <span className={state}>
-                    {state === "done" ? <Check size={11} /> : index + 1}
-                  </span>
-                  <div>
-                    <strong>{title}</strong>
-                    <small>{owner}</small>
-                  </div>
-                  <em>{state === "done" ? "已完成" : state === "run" ? "执行中" : "等待中"}</em>
+                ["市场研究", "已完成", "#00b9a7"],
+                ["品牌策略", "审核中", "#ff5e3a"],
+                ["内容规划", "执行中", "#8e6cff"],
+              ].map(([name, state, color], index) => (
+                <div key={name}>
+                  <i style={{ background: color }}>{index + 1}</i>
+                  <strong>{name}</strong>
+                  <span>{state}</span>
+                  {index < 2 && <b />}
                 </div>
               ))}
             </div>
-            <div className="typing">
-              <span />
-              <span />
-              <span /> Agent 团队正在协作
-            </div>
           </div>
-          <aside className="run-panel">
-            <div className="run-head">
-              <strong>实时进程</strong>
-              <button>
-                <X size={14} />
-              </button>
-            </div>
-            <div className="run-summary">
-              <span>
-                <Zap size={15} />
-              </span>
-              <div>
-                <small>ACTIVE RUN</small>
-                <strong>新品发布策略</strong>
-              </div>
-              <i>68%</i>
-            </div>
-            <div className="progress-bar">
-              <span />
-            </div>
-            <p>执行轨迹</p>
-            {[
-              ["Research", "市场扫描已完成", "10:26", "done"],
-              ["Strategy", "正在生成定位假设", "10:28", "run"],
-              ["Creative", "等待策略输入", "—", ""],
-            ].map(([name, task, time, state]) => (
-              <div className={`timeline-row ${state}`} key={name}>
-                <span>{state === "done" ? <Check size={10} /> : <CircleDot size={10} />}</span>
-                <div>
-                  <strong>{name}</strong>
-                  <small>{task}</small>
-                </div>
-                <time>{time}</time>
-              </div>
-            ))}
-            <div className="approval-mini">
-              <ShieldCheck size={14} />
-              <div>
-                <strong>人工审批</strong>
-                <small>发布策略完成后需要确认</small>
-              </div>
-            </div>
-          </aside>
-        </div>
-        <div className="composer">
-          <span>告诉团队接下来要做什么…</span>
-          <button>
-            <Plus size={14} />
-          </button>
-          <button className="send">
-            <Send size={13} />
-          </button>
         </div>
       </div>
-    </div>
-  );
-}
-
-function WorkflowPreview({ step, index }: { step: (typeof workflowSteps)[number]; index: number }) {
-  const Icon = step.icon;
-  return (
-    <div className="workflow-preview" style={{ "--step-color": step.color } as React.CSSProperties}>
-      <div className="preview-top">
-        <span>WORKFLOW / 0{index + 1}</span>
+      <div className="floating-card floating-agent">
         <span>
-          <i /> LIVE
+          <BrainCircuit />
         </span>
-      </div>
-      <div className="preview-canvas">
-        <div className="preview-icon">
-          <Icon size={27} />
+        <div>
+          <small>AI 总经理</small>
+          <strong>已拆解 12 个项目任务</strong>
         </div>
-        <small>{step.label}</small>
-        <h3>{step.title}</h3>
-        <p>{step.description}</p>
-        <div className="preview-output">
-          <FileText size={17} />
-          <div>
-            <small>本阶段产出</small>
-            <strong>{step.output}</strong>
-          </div>
-        </div>
+        <Check />
       </div>
-      <div className="preview-progress">
-        {workflowSteps.map((_, i) => (
-          <span key={i} className={i <= index ? "done" : ""} />
-        ))}
+      <div className="floating-card floating-deliver">
+        <FileCheck2 />
+        <div>
+          <small>交付物已更新</small>
+          <strong>品牌策略 V2.1</strong>
+        </div>
+        <span>刚刚</span>
+      </div>
+      <div className="visual-badge">
+        <Zap size={15} fill="currentColor" /> 3 个 Agent 正在协作
       </div>
     </div>
   );
 }
 
-function ApprovalCard() {
-  return (
-    <div className="approval-card">
-      <div className="approval-head">
-        <div>
-          <ShieldCheck size={18} />
-          <span>
-            <strong>需要你的审核</strong>
-            <small>品牌发布策略 · v2.3</small>
-          </span>
-        </div>
-        <button>
-          <MoreHorizontal size={17} />
-        </button>
-      </div>
-      <div className="approval-preview">
-        <small>核心传播主张</small>
-        <h3>“把复杂留给 AI，把判断留给你。”</h3>
-        <p>基于 24 份竞品材料与 8 个用户访谈提炼，目标受众匹配度 91%。</p>
-        <div>
-          <span>
-            <FileText size={13} /> 策略报告.pdf
-          </span>
-          <span>
-            <BarChart3 size={13} /> 研究依据
-          </span>
-        </div>
-      </div>
-      <div className="policy-row">
-        <Code2 size={15} />
-        <div>
-          <strong>Policy checks passed</strong>
-          <small>品牌规范 · 合规用语 · 预算范围</small>
-        </div>
-        <Check size={15} />
-      </div>
-      <div className="approval-actions">
-        <button>驳回并修改</button>
-        <button>
-          <Check size={14} /> 批准并继续
-        </button>
-      </div>
-      <p>
-        <Clock3 size={12} /> Agent 团队正在等待你的决定
-      </p>
-    </div>
-  );
+
+export default function App() {
+  const [productMode, setProductMode] = useState(window.location.pathname.startsWith("/app") || window.location.hash === "#/app");
+  useEffect(() => {
+    const sync = () => setProductMode(window.location.pathname.startsWith("/app") || window.location.hash === "#/app");
+    window.addEventListener("hashchange", sync);
+    window.addEventListener("popstate", sync);
+    return () => {
+      window.removeEventListener("hashchange", sync);
+      window.removeEventListener("popstate", sync);
+    };
+  }, []);
+  if (productMode) return <ProductApp />;
+  return <LandingApp />;
 }

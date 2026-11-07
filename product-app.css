@@ -1,3 +1,4 @@
+@layer theme, base, components, utilities;
 @layer components {
   .sf-app {
     --sf-bg: #eeeae1;
@@ -110,6 +111,7 @@
   .sf-thread-panel {
     min-width: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     border-right: 1px solid #d5cfc3;
     background: #f8f5ee;
     padding: 13px 11px 18px;
@@ -560,12 +562,18 @@
   }
   .sf-thread-panel {
     grid-column: 1;
+    overflow-x: hidden;
   }
   .sf-chat {
     grid-column: 2;
   }
   .sf-run-panel {
     grid-column: 3;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+  .sf-chat-layout > * {
+    min-width: 0;
   }
   .sf-chat {
     min-width: 0;
@@ -1033,7 +1041,9 @@
   }
 
   .sf-run-panel {
+    min-width: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     border-left: 1px solid var(--sf-line);
     background: #fafaf9;
     padding: 0 14px 20px;
