@@ -650,6 +650,20 @@
     border-radius: 50%;
     background: #30b78b;
   }
+  .sf-agent-avatar.has-face {
+    background: #fff;
+  }
+  .sf-agent-avatar-face {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    overflow: hidden;
+  }
+  .sf-agent-avatar-face svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
   .sf-agent-avatar.small {
     width: 29px;
     height: 29px;

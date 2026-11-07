@@ -34,3 +34,5 @@ pnpm build     # 产物在 dist/
 ```
 
 > 注：`ProductApp.tsx` / `product-app.css` 位于根目录是 Figma Make 的建文件机制所致；`src/App.tsx` 通过 `../ProductApp` 引用，保持此布局即可正常构建。
+>
+> Agent 头像为 DiceBear **Lorelei** 人物风（与主应用头像库同风格），SVG 内嵌在 `ProductApp.tsx` 的 `AVATAR_SVG` 映射里，离线渲染、无外部依赖。
